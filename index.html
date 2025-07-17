@@ -41,18 +41,18 @@
       color: #007acc;
     }
 
-    .history-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin: 5px 0;
-    }
-
     .color-box {
       width: 20px;
       height: 20px;
       border: 1px solid #333;
       opacity: 0.9;
+      margin-left: 5px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
     }
 
     .game-area {
@@ -106,12 +106,26 @@
       font-weight: bold;
     }
 
-    #rigNotice {
-      text-align: center;
-      font-size: 16px;
-      color: red;
-      margin-top: 10px;
+    #riggedHint {
+      width: 8px;
+      height: 8px;
+      background: gray;
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      border-radius: 50%;
+      opacity: 0.4;
+      z-index: 9999;
+      pointer-events: none;
     }
+
+    #historyCountInput {
+      margin-top: 10px;
+      width: 60px;
+      padding: 5px;
+      font-size: 14px;
+    }
+
   </style>
 
   <!-- Firebase -->
@@ -120,24 +134,24 @@
 </head>
 <body>
 
+<div id="riggedHint"></div>
+
 <div>
   <h1>🎲 Color Game 🎲</h1>
   <div class="container">
-    <!-- History -->
     <div class="panel">
       <h3>Previous Rolls</h3>
-      <div id="historyBox"></div>
+      <label for="historyCountInput">Show:</label>
+      <input id="historyCountInput" type="number" min="1" max="20" value="5" onchange="adjustHistoryCount()">
+      <div id="historyBox" style="margin-top: 10px;"></div>
     </div>
 
-    <!-- Game Area -->
     <div>
       <div class="game-area" id="gameArea"></div>
       <div class="result" id="resultText">Waiting for roll...</div>
-      <div id="rigNotice"></div>
       <button onclick="rollDice()">ROLL DICE</button>
     </div>
 
-    <!-- Current -->
     <div class="panel">
       <h3>Current Roll</h3>
       <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
@@ -146,21 +160,20 @@
 </div>
 
 <script>
-  const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
   const rotations = {
-    Red:    "rotateX(0deg) rotateY(0deg)",
+    Red: "rotateX(0deg) rotateY(0deg)",
     Violet: "rotateX(0deg) rotateY(180deg)",
-    Blue:   "rotateX(0deg) rotateY(-90deg)",
-    Green:  "rotateX(0deg) rotateY(90deg)",
-    White:  "rotateX(90deg) rotateY(0deg)",
+    Blue: "rotateX(0deg) rotateY(-90deg)",
+    Green: "rotateX(0deg) rotateY(90deg)",
+    White: "rotateX(90deg) rotateY(0deg)",
     Yellow: "rotateX(-90deg) rotateY(0deg)"
   };
 
+  const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
   const gameArea = document.getElementById("gameArea");
   const resultText = document.getElementById("resultText");
   const historyBox = document.getElementById("historyBox");
   const currentBox = document.getElementById("currentBox");
-  const rigNotice = document.getElementById("rigNotice");
 
   const firebaseConfig = {
     apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
@@ -175,17 +188,16 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const presetRef = db.ref("presetDice");
+  const rollingRef = db.ref("isRolling");
 
   let rigged = null;
   let history = [];
+  let historyLimit = 5;
 
   presetRef.on("value", snap => {
     rigged = snap.val();
-    if (rigged && Array.isArray(rigged)) {
-      rigNotice.textContent = `🎯 Rig set to: ${rigged.join(", ")}`;
-    } else {
-      rigNotice.textContent = "";
-    }
+    const hintDot = document.getElementById("riggedHint");
+    hintDot.style.background = (rigged && rigged.length > 0) ? "green" : "gray";
   });
 
   function createColorBox(color) {
@@ -197,17 +209,15 @@
 
   function updateHistory(colors) {
     history.unshift(colors);
-    if (history.length > 5) history.pop();
-
+    if (history.length > historyLimit) history.length = historyLimit;
     historyBox.innerHTML = "";
     history.forEach((entry, idx) => {
       const row = document.createElement("div");
       row.className = "history-item";
-
       const label = document.createElement("span");
       label.textContent = `${idx + 1}.`;
+      label.style.width = "20px";
       row.appendChild(label);
-
       entry.forEach(color => row.appendChild(createColorBox(color)));
       historyBox.appendChild(row);
     });
@@ -218,10 +228,19 @@
     colors.forEach(color => currentBox.appendChild(createColorBox(color)));
   }
 
-  function rollDice() {
+  function adjustHistoryCount() {
+    const input = document.getElementById("historyCountInput");
+    const value = parseInt(input.value);
+    if (!isNaN(value) && value > 0) {
+      historyLimit = value;
+      updateHistory([]);
+    }
+  }
+
+  async function rollDice() {
     gameArea.innerHTML = "";
-    resultText.textContent = "Rolling...";
-    rigNotice.textContent = "";
+    resultText.textContent = "🎲 Rolling...";
+    await rollingRef.set(true);
 
     const results = rigged || [
       colors[Math.floor(Math.random() * colors.length)],
@@ -241,7 +260,6 @@
         dice.appendChild(f);
       });
 
-      // Calculate smooth final rotation
       const baseRotation = rotations[color];
       const match = baseRotation.match(/rotateX\((-?\d+)deg\)\srotateY\((-?\d+)deg\)/);
       const x = parseInt(match[1]);
@@ -254,14 +272,14 @@
       }, 50);
     });
 
-    setTimeout(() => {
+    setTimeout(async () => {
       resultText.textContent = `🎯 Result: ${results.join(", ")}`;
       updateCurrent(results);
       updateHistory(results);
-      db.ref("presetDice").set(null);  // Clear rig after roll
+      await presetRef.set(null);
+      await rollingRef.set(false);
     }, 1600);
   }
 </script>
-
 </body>
 </html>
