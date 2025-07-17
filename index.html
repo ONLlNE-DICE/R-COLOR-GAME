@@ -72,8 +72,6 @@
       position: absolute;
       top: 120px;
       transform-style: preserve-3d;
-      transform: rotateX(0) rotateY(0);
-      transition: transform 1.5s ease-in-out;
     }
 
     .face {
@@ -228,15 +226,18 @@
         dice.appendChild(f);
       });
 
-      // Initial spin for animation only
-      const randomRotation = `rotateX(${360 + Math.random()*720}deg) rotateY(${360 + Math.random()*720}deg)`;
-      dice.style.transform = randomRotation;
+      // Calculate smooth final rotation
+      const baseRotation = rotations[color];
+      const match = baseRotation.match(/rotateX\((-?\d+)deg\)\srotateY\((-?\d+)deg\)/);
+      const x = parseInt(match[1]);
+      const y = parseInt(match[2]);
+      const finalRotation = `rotateX(${x + 720}deg) rotateY(${y + 720}deg)`;
 
-      // Smooth to final pose
+      // Animate directly to final position
       setTimeout(() => {
-        dice.style.transition = "transform 1.2s ease-in-out";
-        dice.style.transform = rotations[color];
-      }, 100);
+        dice.style.transition = "transform 1.5s ease-in-out";
+        dice.style.transform = finalRotation;
+      }, 50);
     });
 
     setTimeout(() => {
@@ -244,7 +245,7 @@
       updateCurrent(results);
       updateHistory(results);
       presetRef.set(null);
-    }, 1400); // Wait until animation finishes
+    }, 1600);
   }
 </script>
 
