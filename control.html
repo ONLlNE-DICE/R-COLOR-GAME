@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Control Panel</title>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; }
+    select, button { font-size: 18px; margin: 10px; padding: 8px 16px; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <h2>🎮 Rig Control</h2>
+  <select id="d1"><option>Red</option><option>Blue</option><option>Green</option><option>Yellow</option><option>White</option><option>Violet</option></select>
+  <select id="d2"><option>Red</option><option>Blue</option><option>Green</option><option>Yellow</option><option>White</option><option>Violet</option></select>
+  <select id="d3"><option>Red</option><option>Blue</option><option>Green</option><option>Yellow</option><option>White</option><option>Violet</option></select><br>
+  <button onclick="send()">Set Dice</button>
+
+  <script>
+    const db = firebase.database();
+    const presetRef = db.ref('presetDice');
+
+    function send() {
+      const result = [
+        document.getElementById('d1').value,
+        document.getElementById('d2').value,
+        document.getElementById('d3').value
+      ];
+      presetRef.set(result);
+      alert('Dice rigged!');
+    }
+  </script>
+</body>
+</html>
