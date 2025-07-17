@@ -1,48 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Color Game</title>
+  <meta charset="UTF-8">
+  <title>Peryahan 3D Color Dice 🎲</title>
   <style>
     body {
-      background: #111;
-      color: white;
-      text-align: center;
+      background: #f3f3f3;
       font-family: sans-serif;
+      text-align: center;
+      margin: 0;
     }
 
-    .dice {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
+    h1 {
+      color: #d80000;
+      text-shadow: 2px 2px gold;
       margin: 20px;
     }
 
-    .dice div {
-      width: 100px;
-      height: 100px;
-      font-size: 20px;
-      border: 2px solid #fff;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.5s ease, background 0.3s, filter 0.3s, opacity 0.3s;
+    .game-area {
+      width: 320px;
+      height: 300px;
+      margin: auto;
+      background: linear-gradient(to bottom, #ffe066, #ffb347);
+      border: 10px solid #007acc;
+      position: relative;
+      perspective: 1000px;
+      overflow: hidden;
+    }
+
+    .dice {
+      width: 60px;
+      height: 60px;
+      position: absolute;
+      top: 120px;
+      left: 0;
+      transform-style: preserve-3d;
+      transform: rotateX(0) rotateY(0);
+      transition: transform 1.5s ease-in-out;
     }
 
     .rolling {
-      transform: scale(0.3) rotate(720deg);
-      filter: blur(3px);
-      opacity: 0.3;
+      animation: spin 1s ease-in-out;
     }
 
+    @keyframes spin {
+      0%   { transform: rotateX(0deg) rotateY(0deg); }
+      100% { transform: rotateX(720deg) rotateY(720deg); }
+    }
+
+    .face {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      opacity: 0.95;
+      border: 1px solid #333;
+    }
+
+    .face.front  { background: red;    transform: rotateY(0deg) translateZ(30px); }
+    .face.back   { background: violet; transform: rotateY(180deg) translateZ(30px); }
+    .face.right  { background: blue;   transform: rotateY(90deg) translateZ(30px); }
+    .face.left   { background: green;  transform: rotateY(-90deg) translateZ(30px); }
+    .face.top    { background: white;  transform: rotateX(-90deg) translateZ(30px); }
+    .face.bottom { background: yellow; transform: rotateX(90deg) translateZ(30px); }
+
     button {
-      padding: 10px 20px;
+      margin: 20px;
       font-size: 18px;
-      margin-top: 20px;
+      padding: 10px 20px;
       background: #28a745;
-      border: none;
       color: white;
+      border: none;
       border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .result {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 10px;
     }
   </style>
 
@@ -51,93 +86,80 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
 </head>
 <body>
-  <h1>🎲 Color Game</h1>
 
-  <div class="dice">
-    <div id="dice1">?</div>
-    <div id="dice2">?</div>
-    <div id="dice3">?</div>
-  </div>
+<h1>PERYAHAN COLOR GAME 🎲</h1>
 
-  <button onclick="rollDice()">ROLL</button>
+<div class="game-area" id="gameArea"></div>
+<div class="result" id="resultText">Waiting for roll...</div>
+<button onclick="rollDice()">ROLL DICE</button>
 
-  <!-- 🔊 Dice Roll Sound -->
-  <audio id="rollSound" preload="auto" playsinline>
-    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_8889c15e44.mp3" type="audio/mpeg">
-  </audio>
+<script>
+  const rotations = {
+    Red:    "rotateX(0deg) rotateY(0deg)",       // front
+    Violet: "rotateX(0deg) rotateY(180deg)",     // back
+    Blue:   "rotateX(0deg) rotateY(-90deg)",     // right
+    Green:  "rotateX(0deg) rotateY(90deg)",      // left
+    White:  "rotateX(90deg) rotateY(0deg)",      // ✅ top
+    Yellow: "rotateX(-90deg) rotateY(0deg)"      // ✅ bottom
+  };
 
-  <script>
-    // ✅ Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
-      authDomain: "color-game-135fb.firebaseapp.com",
-      databaseURL: "https://color-game-135fb-default-rtdb.firebaseio.com",
-      projectId: "color-game-135fb",
-      storageBucket: "color-game-135fb.appspot.com",
-      messagingSenderId: "362417900313",
-      appId: "1:362417900313:web:765a79e4c95fa17936fa30"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const presetRef = db.ref('presetDice');
+  const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
+  const gameArea = document.getElementById("gameArea");
+  const resultText = document.getElementById("resultText");
 
-    const diceEls = [
-      document.getElementById("dice1"),
-      document.getElementById("dice2"),
-      document.getElementById("dice3")
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
+    authDomain: "color-game-135fb.firebaseapp.com",
+    databaseURL: "https://color-game-135fb-default-rtdb.firebaseio.com",
+    projectId: "color-game-135fb",
+    storageBucket: "color-game-135fb.appspot.com",
+    messagingSenderId: "362417900313",
+    appId: "1:362417900313:web:765a79e4c95fa17936fa30"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const presetRef = db.ref("presetDice");
+  let rigged = null;
+
+  presetRef.on("value", snap => {
+    rigged = snap.val();
+  });
+
+  function rollDice() {
+    gameArea.innerHTML = "";
+    resultText.textContent = "Rolling...";
+
+    const results = rigged || [
+      colors[Math.floor(Math.random() * colors.length)],
+      colors[Math.floor(Math.random() * colors.length)],
+      colors[Math.floor(Math.random() * colors.length)]
     ];
 
-    const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
-    const colorMap = {
-      Red: "#ff4d4d",
-      Blue: "#4da6ff",
-      Green: "#4dff88",
-      Yellow: "#ffff4d",
-      White: "#ffffff",
-      Violet: "#c77dff"
-    };
+    results.forEach((color, i) => {
+      const dice = document.createElement("div");
+      dice.className = "dice rolling";
+      dice.style.left = `${60 + i * 70}px`;
 
-    let rigged = null;
-
-    // Watch for preset
-    presetRef.on('value', snapshot => {
-      rigged = snapshot.val();
-    });
-
-    function rollDice() {
-      const sound = document.getElementById("rollSound");
-      if (sound) {
-        sound.pause();
-        sound.currentTime = 0;
-        sound.play().catch(e => console.log("Sound blocked:", e));
-      }
-
-      // Animate dice roll
-      diceEls.forEach(el => {
-        el.classList.add("rolling");
-        el.textContent = "?";
-        el.style.background = "#333";
-        el.style.color = "#fff";
+      ["front", "back", "right", "left", "top", "bottom"].forEach(face => {
+        const f = document.createElement("div");
+        f.className = `face ${face}`;
+        dice.appendChild(f);
       });
 
+      gameArea.appendChild(dice);
+
       setTimeout(() => {
-        const result = rigged || [
-          colors[Math.floor(Math.random() * 6)],
-          colors[Math.floor(Math.random() * 6)],
-          colors[Math.floor(Math.random() * 6)]
-        ];
+        dice.classList.remove("rolling");
+        dice.style.transform = rotations[color];
+      }, 800);
+    });
 
-        diceEls.forEach((el, i) => {
-          const color = result[i] || "?";
-          el.textContent = color;
-          el.style.background = colorMap[color] || "#555";
-          el.style.color = color === "White" ? "#000" : "#fff";
-          el.classList.remove("rolling");
-        });
+    resultText.textContent = `🎯 Result: ${results.join(", ")}`;
+    presetRef.set(null);
+  }
+</script>
 
-        presetRef.set(null); // Clear rig
-      }, 600);
-    }
-  </script>
 </body>
 </html>
