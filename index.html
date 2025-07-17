@@ -2,27 +2,65 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Peryahan 3D Color Dice 🎲</title>
+  <title>Color Game 🎲</title>
   <style>
     body {
-      background: #f3f3f3;
-      font-family: sans-serif;
-      text-align: center;
       margin: 0;
+      font-family: sans-serif;
+      background: linear-gradient(to bottom, #ffe066, #ffb347);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
     }
 
     h1 {
+      text-align: center;
       color: #d80000;
       text-shadow: 2px 2px gold;
-      margin: 20px;
+    }
+
+    .container {
+      display: flex;
+      margin-top: 20px;
+      gap: 40px;
+    }
+
+    .panel {
+      border: 4px solid #007acc;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      min-width: 200px;
+      min-height: 260px;
+    }
+
+    .panel h3 {
+      margin-top: 0;
+      text-align: center;
+      color: #007acc;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 5px 0;
+    }
+
+    .color-box {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #333;
+      opacity: 0.9;
     }
 
     .game-area {
       width: 320px;
       height: 300px;
-      margin: auto;
-      background: linear-gradient(to bottom, #ffe066, #ffb347);
-      border: 10px solid #007acc;
+      background: #fff;
+      border: 8px solid #007acc;
+      border-radius: 12px;
       position: relative;
       perspective: 1000px;
       overflow: hidden;
@@ -33,19 +71,9 @@
       height: 60px;
       position: absolute;
       top: 120px;
-      left: 0;
       transform-style: preserve-3d;
       transform: rotateX(0) rotateY(0);
       transition: transform 1.5s ease-in-out;
-    }
-
-    .rolling {
-      animation: spin 1s ease-in-out;
-    }
-
-    @keyframes spin {
-      0%   { transform: rotateX(0deg) rotateY(0deg); }
-      100% { transform: rotateX(720deg) rotateY(720deg); }
     }
 
     .face {
@@ -64,7 +92,7 @@
     .face.bottom { background: yellow; transform: rotateX(90deg) translateZ(30px); }
 
     button {
-      margin: 20px;
+      margin-top: 20px;
       font-size: 18px;
       padding: 10px 20px;
       background: #28a745;
@@ -75,9 +103,9 @@
     }
 
     .result {
+      text-align: center;
+      margin-top: 10px;
       font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 10px;
     }
   </style>
 
@@ -87,27 +115,46 @@
 </head>
 <body>
 
-<h1>PERYAHAN COLOR GAME 🎲</h1>
+<div>
+  <h1>🎲 Color Game 🎲</h1>
+  <div class="container">
+    <!-- History -->
+    <div class="panel">
+      <h3>Previous Rolls</h3>
+      <div id="historyBox"></div>
+    </div>
 
-<div class="game-area" id="gameArea"></div>
-<div class="result" id="resultText">Waiting for roll...</div>
-<button onclick="rollDice()">ROLL DICE</button>
+    <!-- Game Area -->
+    <div>
+      <div class="game-area" id="gameArea"></div>
+      <div class="result" id="resultText">Waiting for roll...</div>
+      <button onclick="rollDice()">ROLL DICE</button>
+    </div>
+
+    <!-- Current -->
+    <div class="panel">
+      <h3>Current Roll</h3>
+      <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
+    </div>
+  </div>
+</div>
 
 <script>
   const rotations = {
-    Red:    "rotateX(0deg) rotateY(0deg)",       // front
-    Violet: "rotateX(0deg) rotateY(180deg)",     // back
-    Blue:   "rotateX(0deg) rotateY(-90deg)",     // right
-    Green:  "rotateX(0deg) rotateY(90deg)",      // left
-    White:  "rotateX(90deg) rotateY(0deg)",      // ✅ top
-    Yellow: "rotateX(-90deg) rotateY(0deg)"      // ✅ bottom
+    Red:    "rotateX(0deg) rotateY(0deg)",
+    Violet: "rotateX(0deg) rotateY(180deg)",
+    Blue:   "rotateX(0deg) rotateY(-90deg)",
+    Green:  "rotateX(0deg) rotateY(90deg)",
+    White:  "rotateX(90deg) rotateY(0deg)",
+    Yellow: "rotateX(-90deg) rotateY(0deg)"
   };
 
   const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
   const gameArea = document.getElementById("gameArea");
   const resultText = document.getElementById("resultText");
+  const historyBox = document.getElementById("historyBox");
+  const currentBox = document.getElementById("currentBox");
 
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
     authDomain: "color-game-135fb.firebaseapp.com",
@@ -121,11 +168,43 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const presetRef = db.ref("presetDice");
+
   let rigged = null;
+  let history = [];
 
   presetRef.on("value", snap => {
     rigged = snap.val();
   });
+
+  function createColorBox(color) {
+    const div = document.createElement("div");
+    div.className = "color-box";
+    div.style.background = color.toLowerCase();
+    return div;
+  }
+
+  function updateHistory(colors) {
+    history.unshift(colors);
+    if (history.length > 5) history.pop();
+
+    historyBox.innerHTML = "";
+    history.forEach((entry, idx) => {
+      const row = document.createElement("div");
+      row.className = "history-item";
+
+      const label = document.createElement("span");
+      label.textContent = `${idx + 1}.`;
+      row.appendChild(label);
+
+      entry.forEach(color => row.appendChild(createColorBox(color)));
+      historyBox.appendChild(row);
+    });
+  }
+
+  function updateCurrent(colors) {
+    currentBox.innerHTML = "";
+    colors.forEach(color => currentBox.appendChild(createColorBox(color)));
+  }
 
   function rollDice() {
     gameArea.innerHTML = "";
@@ -139,8 +218,9 @@
 
     results.forEach((color, i) => {
       const dice = document.createElement("div");
-      dice.className = "dice rolling";
+      dice.className = "dice";
       dice.style.left = `${60 + i * 70}px`;
+      gameArea.appendChild(dice);
 
       ["front", "back", "right", "left", "top", "bottom"].forEach(face => {
         const f = document.createElement("div");
@@ -148,16 +228,23 @@
         dice.appendChild(f);
       });
 
-      gameArea.appendChild(dice);
+      // Initial spin for animation only
+      const randomRotation = `rotateX(${360 + Math.random()*720}deg) rotateY(${360 + Math.random()*720}deg)`;
+      dice.style.transform = randomRotation;
 
+      // Smooth to final pose
       setTimeout(() => {
-        dice.classList.remove("rolling");
+        dice.style.transition = "transform 1.2s ease-in-out";
         dice.style.transform = rotations[color];
-      }, 800);
+      }, 100);
     });
 
-    resultText.textContent = `🎯 Result: ${results.join(", ")}`;
-    presetRef.set(null);
+    setTimeout(() => {
+      resultText.textContent = `🎯 Result: ${results.join(", ")}`;
+      updateCurrent(results);
+      updateHistory(results);
+      presetRef.set(null);
+    }, 1400); // Wait until animation finishes
   }
 </script>
 
