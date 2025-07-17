@@ -105,6 +105,13 @@
       margin-top: 10px;
       font-weight: bold;
     }
+
+    #rigNotice {
+      text-align: center;
+      font-size: 16px;
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 
   <!-- Firebase -->
@@ -126,6 +133,7 @@
     <div>
       <div class="game-area" id="gameArea"></div>
       <div class="result" id="resultText">Waiting for roll...</div>
+      <div id="rigNotice"></div>
       <button onclick="rollDice()">ROLL DICE</button>
     </div>
 
@@ -138,6 +146,7 @@
 </div>
 
 <script>
+  const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
   const rotations = {
     Red:    "rotateX(0deg) rotateY(0deg)",
     Violet: "rotateX(0deg) rotateY(180deg)",
@@ -147,11 +156,11 @@
     Yellow: "rotateX(-90deg) rotateY(0deg)"
   };
 
-  const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
   const gameArea = document.getElementById("gameArea");
   const resultText = document.getElementById("resultText");
   const historyBox = document.getElementById("historyBox");
   const currentBox = document.getElementById("currentBox");
+  const rigNotice = document.getElementById("rigNotice");
 
   const firebaseConfig = {
     apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
@@ -172,6 +181,11 @@
 
   presetRef.on("value", snap => {
     rigged = snap.val();
+    if (rigged && Array.isArray(rigged)) {
+      rigNotice.textContent = `🎯 Rig set to: ${rigged.join(", ")}`;
+    } else {
+      rigNotice.textContent = "";
+    }
   });
 
   function createColorBox(color) {
@@ -207,6 +221,7 @@
   function rollDice() {
     gameArea.innerHTML = "";
     resultText.textContent = "Rolling...";
+    rigNotice.textContent = "";
 
     const results = rigged || [
       colors[Math.floor(Math.random() * colors.length)],
@@ -233,7 +248,6 @@
       const y = parseInt(match[2]);
       const finalRotation = `rotateX(${x + 720}deg) rotateY(${y + 720}deg)`;
 
-      // Animate directly to final position
       setTimeout(() => {
         dice.style.transition = "transform 1.5s ease-in-out";
         dice.style.transform = finalRotation;
@@ -244,7 +258,7 @@
       resultText.textContent = `🎯 Result: ${results.join(", ")}`;
       updateCurrent(results);
       updateHistory(results);
-      presetRef.set(null);
+      db.ref("presetDice").set(null);  // Clear rig after roll
     }, 1600);
   }
 </script>
