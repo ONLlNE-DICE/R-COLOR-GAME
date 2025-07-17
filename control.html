@@ -1,35 +1,118 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Control Panel</title>
+  <title>Color Game Control</title>
   <style>
-    body { background: #111; color: white; font-family: sans-serif; text-align: center; }
-    select, button { font-size: 18px; margin: 10px; padding: 8px 16px; }
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: sans-serif;
+    }
+
+    select {
+      font-size: 18px;
+      padding: 5px 10px;
+      margin: 10px;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 20px 10px;
+      background: #28a745;
+      border: none;
+      color: white;
+      border-radius: 8px;
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #ccc;
+    }
   </style>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
-  <script src="firebase-config.js"></script>
 </head>
 <body>
-  <h2>🎮 Rig Control</h2>
-  <select id="d1"><option>Red</option><option>Blue</option><option>Green</option><option>Yellow</option><option>White</option><option>Violet</option></select>
-  <select id="d2"><option>Red</option><option>Blue</option><option>Green</option><option>Yellow</option><option>White</option><option>Violet</option></select>
-  <select id="d3"><option>Red</option><option>Blue</option><option>Green</option><option>Yellow</option><option>White</option><option>Violet</option></select><br>
-  <button onclick="send()">Set Dice</button>
+  <h1>🎮 Control Panel</h1>
+
+  <div>
+    <select id="color1">
+      <option>Red</option>
+      <option>Blue</option>
+      <option>Green</option>
+      <option>Yellow</option>
+      <option>White</option>
+      <option>Violet</option>
+    </select>
+
+    <select id="color2">
+      <option>Red</option>
+      <option>Blue</option>
+      <option>Green</option>
+      <option>Yellow</option>
+      <option>White</option>
+      <option>Violet</option>
+    </select>
+
+    <select id="color3">
+      <option>Red</option>
+      <option>Blue</option>
+      <option>Green</option>
+      <option>Yellow</option>
+      <option>White</option>
+      <option>Violet</option>
+    </select>
+  </div>
+
+  <button onclick="setRig()">🎯 Set Rig</button>
+  <button onclick="clearRig()" style="background:#dc3545">🧹 Clear</button>
+
+  <div class="status" id="currentRig">Loading current preset...</div>
 
   <script>
-    const db = firebase.database();
-    const presetRef = db.ref('presetDice');
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
+      authDomain: "color-game-135fb.firebaseapp.com",
+      databaseURL: "https://color-game-135fb-default-rtdb.firebaseio.com",
+      projectId: "color-game-135fb",
+      storageBucket: "color-game-135fb.appspot.com",
+      messagingSenderId: "362417900313",
+      appId: "1:362417900313:web:765a79e4c95fa17936fa30"
+    };
 
-    function send() {
-      const result = [
-        document.getElementById('d1').value,
-        document.getElementById('d2').value,
-        document.getElementById('d3').value
-      ];
-      presetRef.set(result);
-      alert('Dice rigged!');
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const presetRef = db.ref("presetDice");
+
+    function setRig() {
+      const c1 = document.getElementById("color1").value;
+      const c2 = document.getElementById("color2").value;
+      const c3 = document.getElementById("color3").value;
+      const rig = [c1, c2, c3];
+
+      presetRef.set(rig);
+      document.getElementById("currentRig").textContent = `✅ Set to: ${rig.join(", ")}`;
     }
+
+    function clearRig() {
+      presetRef.set(null);
+      document.getElementById("currentRig").textContent = "🧹 Cleared. Dice will roll random.";
+    }
+
+    presetRef.on("value", snapshot => {
+      const data = snapshot.val();
+      const status = document.getElementById("currentRig");
+      if (data && Array.isArray(data)) {
+        status.textContent = `🎯 Current preset: ${data.join(", ")}`;
+      } else {
+        status.textContent = "🎲 No rig active (random roll)";
+      }
+    });
   </script>
 </body>
 </html>
