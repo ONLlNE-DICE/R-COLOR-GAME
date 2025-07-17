@@ -189,6 +189,7 @@
   const db = firebase.database();
   const presetRef = db.ref("presetDice");
   const rollingRef = db.ref("isRolling");
+  const historyRef = db.ref("history");
 
   let rigged = null;
   let history = [];
@@ -221,6 +222,9 @@
       entry.forEach(color => row.appendChild(createColorBox(color)));
       historyBox.appendChild(row);
     });
+
+    // Push full history to Firebase
+    historyRef.set(history);
   }
 
   function updateCurrent(colors) {
