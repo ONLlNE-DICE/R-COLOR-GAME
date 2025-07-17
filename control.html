@@ -1,81 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Color Game Control</title>
+  <meta charset="UTF-8" />
+  <title>🎮 Rig Control</title>
   <style>
     body {
-      background: #111;
-      color: white;
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
       text-align: center;
-      font-family: sans-serif;
+      padding: 20px;
     }
 
     h1 {
+      margin-bottom: 10px;
+      font-size: 36px;
+    }
+
+    .status {
+      font-size: 20px;
       margin-bottom: 20px;
     }
 
-    .dice-controls {
+    .dice-group {
       display: flex;
       justify-content: center;
-      gap: 20px;
-      margin-bottom: 20px;
+      gap: 40px;
+      margin-bottom: 30px;
     }
 
     .dice-box {
-      background: #222;
+      border: 3px solid #555;
       padding: 15px;
       border-radius: 10px;
-      border: 2px solid #444;
-      min-width: 120px;
+      background-color: #222;
+      width: 150px;
     }
 
-    .color-btn {
-      display: block;
-      margin: 6px auto;
-      padding: 10px 15px;
-      border: none;
+    .dice-box h3 {
+      margin-top: 0;
+      font-size: 20px;
+      color: #eee;
+    }
+
+    .color-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .color-option {
+      width: 45px;
+      height: 45px;
       border-radius: 6px;
       cursor: pointer;
-      color: #fff;
-      font-weight: bold;
-      width: 100px;
+      border: 3px solid transparent;
     }
 
-    .color-btn.Red { background: red; }
-    .color-btn.Blue { background: blue; }
-    .color-btn.Green { background: green; }
-    .color-btn.Yellow { background: gold; color: black; }
-    .color-btn.White { background: white; color: black; }
-    .color-btn.Violet { background: purple; }
-
-    .color-btn.selected {
-      outline: 3px solid white;
+    .color-option.selected {
+      border: 3px solid #0f0;
     }
 
-    button {
-      font-size: 18px;
-      padding: 10px 20px;
-      margin: 10px;
-      background: #28a745;
-      border: none;
+    .submit-btn {
+      margin-top: 25px;
+      padding: 14px 28px;
+      font-size: 20px;
+      background-color: #28a745;
       color: white;
+      border: none;
       border-radius: 8px;
       cursor: pointer;
     }
 
-    button.clear {
-      background: #dc3545;
+    .submit-btn:hover {
+      background-color: #218838;
     }
 
-    .status, .live-result {
-      margin-top: 20px;
+    .color-name {
+      font-size: 16px;
+      margin-top: 6px;
+    }
+
+    .history-section {
+      margin-top: 40px;
+    }
+
+    .history-label {
       font-size: 18px;
-      color: #ccc;
+      margin-bottom: 15px;
     }
 
-    .live-result {
-      color: #ffc107;
-      font-weight: bold;
+    .history-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .history-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-index {
+      font-size: 16px;
+      width: 20px;
+      text-align: right;
+      color: #aaa;
+    }
+
+    .color-set {
+      display: flex;
+      gap: 6px;
+    }
+
+    .color-square {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #444;
+      border-radius: 4px;
     }
   </style>
 
@@ -84,30 +130,45 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
 </head>
 <body>
-  <h1>🎮 Color Game Control Panel</h1>
 
-  <div class="dice-controls">
-    <div class="dice-box">
-      <div>🎲 Dice 1</div>
-      <div id="dice1-buttons"></div>
+  <h1>🎮 Rig Controller</h1>
+  <div class="status" id="statusText">⏳ Connecting...</div>
+
+  <div class="dice-group">
+    <div class="dice-box" id="dice1Box">
+      <h3>Dice 1</h3>
+      <div class="color-options" id="dice1Colors"></div>
+      <div class="color-name" id="dice1Selected">None</div>
     </div>
-    <div class="dice-box">
-      <div>🎲 Dice 2</div>
-      <div id="dice2-buttons"></div>
+
+    <div class="dice-box" id="dice2Box">
+      <h3>Dice 2</h3>
+      <div class="color-options" id="dice2Colors"></div>
+      <div class="color-name" id="dice2Selected">None</div>
     </div>
-    <div class="dice-box">
-      <div>🎲 Dice 3</div>
-      <div id="dice3-buttons"></div>
+
+    <div class="dice-box" id="dice3Box">
+      <h3>Dice 3</h3>
+      <div class="color-options" id="dice3Colors"></div>
+      <div class="color-name" id="dice3Selected">None</div>
     </div>
   </div>
 
-  <button onclick="setRig()">🎯 Set Rig</button>
-  <button class="clear" onclick="clearRig()">🧹 Clear</button>
+  <button class="submit-btn" onclick="submitRig()">Submit</button>
 
-  <div class="status" id="currentRig">Loading current preset...</div>
-  <div class="live-result" id="liveResult">🎲 Waiting for live result...</div>
+  <div class="history-section">
+    <div class="history-label">🎲 Roll History</div>
+    <div class="history-column" id="historyContainer"></div>
+  </div>
+
+  <!-- Sound effects -->
+  <audio id="selectSound" src="https://www.soundjay.com/button/sounds/button-20.mp3"></audio>
+  <audio id="submitSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
   <script>
+    const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
+    const selected = [null, null, null];
+
     const firebaseConfig = {
       apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
       authDomain: "color-game-135fb.firebaseapp.com",
@@ -121,75 +182,124 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const presetRef = db.ref("presetDice");
-    const resultRef = db.ref("lastResult");
+    const rollingRef = db.ref("isRolling");
+    const historyRef = db.ref("history");
 
-    const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
-    const selectedColors = ["Red", "Red", "Red"];
+    // Status and auto-clear
+    rollingRef.on("value", (snap) => {
+      const status = snap.val();
+      document.getElementById("statusText").textContent = status ? "🎲 Rolling..." : "✅ Ready";
 
-    function renderColorButtons(diceIndex) {
-      const container = document.getElementById(`dice${diceIndex + 1}-buttons`);
+      if (!status) {
+        selected.fill(null);
+        ["dice1Colors", "dice2Colors", "dice3Colors"].forEach(id => {
+          const children = document.getElementById(id).children;
+          for (let child of children) {
+            child.classList.remove("selected");
+          }
+        });
+        ["dice1Selected", "dice2Selected", "dice3Selected"].forEach(id => {
+          const el = document.getElementById(id);
+          el.textContent = "None";
+          el.style.backgroundColor = "transparent";
+          el.style.width = "";
+          el.style.height = "";
+        });
+
+        // Play sound after roll
+        document.getElementById("submitSound").play();
+      }
+    });
+
+    function renderColors(containerId, index) {
+      const container = document.getElementById(containerId);
+      colors.forEach(color => {
+        const div = document.createElement("div");
+        div.className = "color-option";
+        div.style.backgroundColor = color.toLowerCase();
+        div.onclick = () => {
+          selectColor(index, color, div);
+          document.getElementById("selectSound").play();
+        };
+        container.appendChild(div);
+      });
+    }
+
+    function selectColor(diceIndex, color, element) {
+      selected[diceIndex] = color;
+
+      const containerId = `dice${diceIndex + 1}Colors`;
+      const boxes = document.getElementById(containerId).children;
+      for (let i = 0; i < boxes.length; i++) {
+        boxes[i].classList.remove("selected");
+        if (boxes[i].style.backgroundColor === color.toLowerCase()) {
+          boxes[i].classList.add("selected");
+        }
+      }
+
+      const label = document.getElementById(`dice${diceIndex + 1}Selected`);
+      label.textContent = "";
+      label.style.backgroundColor = color.toLowerCase();
+      label.style.width = "35px";
+      label.style.height = "25px";
+      label.style.margin = "auto";
+    }
+
+    function submitRig() {
+      if (selected.every(c => c)) {
+        presetRef.set(selected);
+        document.getElementById("submitSound").play();
+        const toast = document.createElement("div");
+        toast.textContent = "🎯 Rig submitted!";
+        toast.style.position = "fixed";
+        toast.style.bottom = "30px";
+        toast.style.left = "50%";
+        toast.style.transform = "translateX(-50%)";
+        toast.style.background = "#0f0";
+        toast.style.color = "#000";
+        toast.style.padding = "12px 24px";
+        toast.style.borderRadius = "8px";
+        toast.style.zIndex = 9999;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+      } else {
+        alert("⚠️ Please select a color for all dice.");
+      }
+    }
+
+    renderColors("dice1Colors", 0);
+    renderColors("dice2Colors", 1);
+    renderColors("dice3Colors", 2);
+
+    // Vertical roll history
+    historyRef.on("value", (snapshot) => {
+      const history = snapshot.val() || [];
+      const container = document.getElementById("historyContainer");
       container.innerHTML = "";
 
-      colors.forEach(color => {
-        const btn = document.createElement("button");
-        btn.className = `color-btn ${color}`;
-        btn.textContent = color;
-        btn.onclick = () => {
-          selectedColors[diceIndex] = color;
-          highlightSelected(diceIndex);
-        };
-        container.appendChild(btn);
+      history.slice(-5).forEach((roll, idx) => {
+        const row = document.createElement("div");
+        row.className = "history-box";
+
+        const index = document.createElement("div");
+        index.className = "history-index";
+        index.textContent = `${idx + 1}.`;
+
+        const colorSet = document.createElement("div");
+        colorSet.className = "color-set";
+
+        roll.forEach(color => {
+          const square = document.createElement("div");
+          square.className = "color-square";
+          square.style.backgroundColor = color.toLowerCase();
+          colorSet.appendChild(square);
+        });
+
+        row.appendChild(index);
+        row.appendChild(colorSet);
+        container.appendChild(row);
       });
-
-      highlightSelected(diceIndex);
-    }
-
-    function highlightSelected(index) {
-      const container = document.getElementById(`dice${index + 1}-buttons`);
-      const buttons = container.querySelectorAll(".color-btn");
-      buttons.forEach(btn => {
-        if (btn.textContent === selectedColors[index]) {
-          btn.classList.add("selected");
-        } else {
-          btn.classList.remove("selected");
-        }
-      });
-    }
-
-    function setRig() {
-      presetRef.set(selectedColors);
-      document.getElementById("currentRig").textContent = `✅ Set to: ${selectedColors.join(", ")}`;
-    }
-
-    function clearRig() {
-      presetRef.set(null);
-      document.getElementById("currentRig").textContent = "🧹 Cleared. Dice will roll random.";
-    }
-
-    presetRef.on("value", snapshot => {
-      const data = snapshot.val();
-      const status = document.getElementById("currentRig");
-      if (data && Array.isArray(data)) {
-        status.textContent = `🎯 Current preset: ${data.join(", ")}`;
-      } else {
-        status.textContent = "🎲 No rig active (random roll)";
-      }
     });
-
-    resultRef.on("value", snapshot => {
-      const data = snapshot.val();
-      const liveResult = document.getElementById("liveResult");
-      if (data && Array.isArray(data)) {
-        liveResult.textContent = `🎲 Last Roll: ${data.join(", ")}`;
-      } else {
-        liveResult.textContent = "🎲 Waiting for live result...";
-      }
-    });
-
-    // Render buttons for all 3 dice
-    for (let i = 0; i < 3; i++) {
-      renderColorButtons(i);
-    }
   </script>
 </body>
 </html>
