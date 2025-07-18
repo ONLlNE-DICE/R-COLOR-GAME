@@ -31,8 +31,9 @@
       background: white;
       padding: 15px;
       border-radius: 10px;
-      min-width: 200px;
-      min-height: 260px;
+      width: 200px;
+      height: 280px;
+      overflow-y: auto;
     }
 
     .panel h3 {
@@ -107,14 +108,14 @@
     }
 
     #riggedHint {
-      width: 8px;
-      height: 8px;
-      background: gray;
+      width: 6px;
+      height: 6px;
+      background: red;
       position: absolute;
-      top: 8px;
-      left: 8px;
+      top: 6px;
+      right: 6px;
       border-radius: 50%;
-      opacity: 0.4;
+      opacity: 0.5;
       z-index: 9999;
       pointer-events: none;
     }
@@ -126,6 +127,36 @@
       font-size: 14px;
     }
 
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .draggable-bet-box {
+      position: absolute;
+      top: 460px;
+      left: 40px;
+      background: white;
+      border: 2px solid #007acc;
+      border-radius: 6px;
+      padding: 6px;
+      width: 200px;
+      resize: none;
+      z-index: 1000;
+      cursor: move;
+    }
+
+    .draggable-bet-box textarea {
+      width: 100%;
+      border: none;
+      resize: none;
+      outline: none;
+      font-size: 14px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
   </style>
 
   <!-- Firebase -->
@@ -135,6 +166,10 @@
 <body>
 
 <div id="riggedHint"></div>
+
+<!-- 🎵 Sound players -->
+<audio id="rollSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/roll.ogg"></audio>
+<audio id="winSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/success.ogg"></audio>
 
 <div>
   <h1>🎲 Color Game 🎲</h1>
@@ -148,6 +183,16 @@
 
     <div>
       <div class="game-area" id="gameArea"></div>
+
+      <div class="legend">
+        <div class="color-box" style="background:red" title="Red"></div>
+        <div class="color-box" style="background:blue" title="Blue"></div>
+        <div class="color-box" style="background:green" title="Green"></div>
+        <div class="color-box" style="background:yellow" title="Yellow"></div>
+        <div class="color-box" style="background:white" title="White"></div>
+        <div class="color-box" style="background:violet" title="Violet"></div>
+      </div>
+
       <div class="result" id="resultText">Waiting for roll...</div>
       <button onclick="rollDice()">ROLL DICE</button>
     </div>
@@ -157,6 +202,11 @@
       <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
     </div>
   </div>
+</div>
+
+<!-- Draggable editable box (label removed) -->
+<div class="draggable-bet-box" id="draggableBox">
+  <textarea id="allowedBets" placeholder="Enter..." oninput="autoExpand(this)"></textarea>
 </div>
 
 <script>
@@ -174,6 +224,8 @@
   const resultText = document.getElementById("resultText");
   const historyBox = document.getElementById("historyBox");
   const currentBox = document.getElementById("currentBox");
+  const rollSound = document.getElementById("rollSound");
+  const winSound = document.getElementById("winSound");
 
   const firebaseConfig = {
     apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
@@ -198,7 +250,7 @@
   presetRef.on("value", snap => {
     rigged = snap.val();
     const hintDot = document.getElementById("riggedHint");
-    hintDot.style.background = (rigged && rigged.length > 0) ? "green" : "gray";
+    hintDot.style.background = (rigged && rigged.length > 0) ? "green" : "red";
   });
 
   function createColorBox(color) {
@@ -222,8 +274,6 @@
       entry.forEach(color => row.appendChild(createColorBox(color)));
       historyBox.appendChild(row);
     });
-
-    // Push full history to Firebase
     historyRef.set(history);
   }
 
@@ -241,9 +291,16 @@
     }
   }
 
+  function autoExpand(textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+  }
+
   async function rollDice() {
     gameArea.innerHTML = "";
     resultText.textContent = "🎲 Rolling...";
+    rollSound.currentTime = 0;
+    rollSound.play();
     await rollingRef.set(true);
 
     const results = rigged || [
@@ -276,14 +333,38 @@
       }, 50);
     });
 
-    setTimeout(async () => {
+    setTimeout(() => {
       resultText.textContent = `🎯 Result: ${results.join(", ")}`;
       updateCurrent(results);
       updateHistory(results);
-      await presetRef.set(null);
-      await rollingRef.set(false);
     }, 1600);
+
+    setTimeout(() => {
+      winSound.currentTime = 0;
+      winSound.play();
+      presetRef.set(null);
+      rollingRef.set(false);
+    }, 1100);
   }
+
+  // Drag logic
+  const dragBox = document.getElementById("draggableBox");
+  let isDragging = false, offsetX, offsetY;
+
+  dragBox.addEventListener("mousedown", e => {
+    isDragging = true;
+    offsetX = e.clientX - dragBox.offsetLeft;
+    offsetY = e.clientY - dragBox.offsetTop;
+  });
+
+  document.addEventListener("mousemove", e => {
+    if (isDragging) {
+      dragBox.style.left = `${e.clientX - offsetX}px`;
+      dragBox.style.top = `${e.clientY - offsetY}px`;
+    }
+  });
+
+  document.addEventListener("mouseup", () => isDragging = false);
 </script>
 </body>
 </html>
