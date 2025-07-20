@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Color Game 🎲</title>
+  <meta charset="UTF-8" />
+  <title>
+
+    
+  </title>
   <style>
     body {
       margin: 0;
       font-family: sans-serif;
-      background: url('bg.jpg') no-repeat center center fixed;
-      background-size: cover;
+      background: url('bg.jpg') center center / cover no-repeat fixed;
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -198,9 +200,6 @@
       line-height: 1.2;
     }
   </style>
-
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -398,7 +397,7 @@
       presetRef.set(null);
       rollingRef.set(false);
       rollBtn.disabled = false;
-    }, 1800);
+    }, 1100);
   }
 </script>
 </body>
