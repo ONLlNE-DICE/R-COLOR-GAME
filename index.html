@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>
-
-    
-  </title>
+  <title>Color Game 🎲</title>
   <style>
     body {
       margin: 0;
@@ -266,31 +263,9 @@
   const rollSound = document.getElementById("rollSound");
   const winSound = document.getElementById("winSound");
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
-    authDomain: "color-game-135fb.firebaseapp.com",
-    databaseURL: "https://color-game-135fb-default-rtdb.firebaseio.com",
-    projectId: "color-game-135fb",
-    storageBucket: "color-game-135fb.appspot.com",
-    messagingSenderId: "362417900313",
-    appId: "1:362417900313:web:765a79e4c95fa17936fa30"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const presetRef = db.ref("presetDice");
-  const rollingRef = db.ref("isRolling");
-  const historyRef = db.ref("history");
-
   let rigged = null;
   let history = [];
   let historyLimit = 5;
-
-  presetRef.on("value", snap => {
-    rigged = snap.val();
-    const hintDot = document.getElementById("riggedHint");
-    hintDot.style.background = (rigged && rigged.length > 0) ? "green" : "red";
-  });
 
   function createColorBox(color) {
     const div = document.createElement("div");
@@ -313,7 +288,6 @@
       entry.forEach(color => row.appendChild(createColorBox(color)));
       historyBox.appendChild(row);
     });
-    historyRef.set(history);
   }
 
   function updateCurrent(colors) {
@@ -344,7 +318,7 @@
     textarea.style.height = mirror.scrollHeight + 2 + "px";
   }
 
-  async function rollDice() {
+  function rollDice() {
     const rollBtn = document.getElementById("rollButton");
     if (rollBtn.disabled) return;
     rollBtn.disabled = true;
@@ -353,7 +327,6 @@
     resultText.textContent = "🎲 Rolling...";
     rollSound.currentTime = 0;
     rollSound.play();
-    await rollingRef.set(true);
 
     const results = rigged || [
       colors[Math.floor(Math.random() * colors.length)],
@@ -374,7 +347,11 @@
       });
 
       const baseRotation = rotations[color];
+      if (!baseRotation) return;
+
       const match = baseRotation.match(/rotateX\((-?\d+)deg\)\srotateY\((-?\d+)deg\)/);
+      if (!match) return;
+
       const x = parseInt(match[1]);
       const y = parseInt(match[2]);
       const finalRotation = `rotateX(${x + 720}deg) rotateY(${y + 720}deg)`;
@@ -394,8 +371,6 @@
     setTimeout(() => {
       winSound.currentTime = 0;
       winSound.play();
-      presetRef.set(null);
-      rollingRef.set(false);
       rollBtn.disabled = false;
     }, 1100);
   }
