@@ -7,7 +7,8 @@
     body {
       margin: 0;
       font-family: sans-serif;
-      background: linear-gradient(to bottom, #ffe066, #ffb347);
+      background: url('bg.jpg') no-repeat center center fixed;
+      background-size: cover;
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -211,7 +212,6 @@
 <div>
   <h1>🎲 Color Game 🎲</h1>
   <div class="container">
-    <!-- Left Panel: History -->
     <div class="panel">
       <h3>Previous Rolls</h3>
       <label for="historyCountInput">Show:</label>
@@ -219,7 +219,6 @@
       <div id="historyBox" style="margin-top: 10px;"></div>
     </div>
 
-    <!-- Center: Game Board -->
     <div class="game-wrapper">
       <div class="game-area" id="gameArea"></div>
 
@@ -243,7 +242,6 @@
       </div>
     </div>
 
-    <!-- Right Panel: Current -->
     <div class="panel">
       <h3>Current Roll</h3>
       <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
@@ -400,7 +398,7 @@
       presetRef.set(null);
       rollingRef.set(false);
       rollBtn.disabled = false;
-    }, 1100);
+    }, 1800);
   }
 </script>
 </body>
