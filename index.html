@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
   <meta charset="UTF-8">
   <title>Color Game 🎲</title>
   <style>
@@ -28,7 +27,7 @@
       gap: 40px;
       width: 100%;
       max-width: 1000px;
-      margin: 0 auto;
+      margin: 400px auto 0 auto;
     }
 
     .panel {
@@ -204,23 +203,23 @@
 </head>
 <body>
 
-<div id="riggedHint"></div>
+<div id="riggedHint" style="background: red;"></div>
 
 <audio id="rollSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/roll.ogg"></audio>
 <audio id="winSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/success.ogg"></audio>
 
 <div>
-  <h1>🎲 Color Game 🎲</h1>
+  
   <div class="container">
     <div class="panel">
       <h3>Previous Rolls</h3>
       <label for="historyCountInput">Show:</label>
       <input id="historyCountInput" type="number" min="1" max="20" value="5" onchange="adjustHistoryCount()">
-      <div id="historyBox" style="margin-top: 10px;"></div>
+      <div id="historyBox" style="margin-top: 10px;"><div class="history-item"><span style="width: 20px;">1.</span><div class="color-box" style="background: red;"></div><div class="color-box" style="background: red;"></div><div class="color-box" style="background: blue;"></div></div></div>
     </div>
 
     <div class="game-wrapper">
-      <div class="game-area" id="gameArea"></div>
+      <div class="game-area" id="gameArea"><div class="dice" style="left: 60px; transition: transform 1.5s ease-in-out 0s; transform: rotateX(720deg) rotateY(720deg);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div><div class="dice" style="left: 130px; transition: transform 1.5s ease-in-out 0s; transform: rotateX(720deg) rotateY(720deg);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div><div class="dice" style="left: 200px; transition: transform 1.5s ease-in-out 0s; transform: rotateX(720deg) rotateY(630deg);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div></div>
 
       <div class="legend">
         <div class="color-box" style="background:red" title="Red"></div>
@@ -231,20 +230,20 @@
         <div class="color-box" style="background:violet" title="Violet"></div>
       </div>
 
-      <div class="result" id="resultText">Waiting for roll...</div>
+      <div class="result" id="resultText">🎯 Result: Red, Red, Blue</div>
 
       <div class="center-controls">
         <button id="rollButton" onclick="rollDice()">ROLL DICE</button>
         <div class="draggable-bet-box">
-          <textarea id="allowedBets" placeholder="Enter..." oninput="autoExpand(this)"></textarea>
-          <span id="mirror"></span>
+          <textarea id="allowedBets" placeholder="Enter..." oninput="autoExpand(this)" style="width: 26px; height: 49px;"></textarea>
+          <span id="mirror" style="font: 40px monospace; padding: 0px; border: 0px none rgb(0, 0, 0); white-space: pre-wrap;"> </span>
         </div>
       </div>
     </div>
 
     <div class="panel">
       <h3>Current Roll</h3>
-      <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
+      <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"><div class="color-box" style="background: red;"></div><div class="color-box" style="background: red;"></div><div class="color-box" style="background: blue;"></div></div>
     </div>
   </div>
 </div>
@@ -398,8 +397,9 @@
       presetRef.set(null);
       rollingRef.set(false);
       rollBtn.disabled = false;
-    }, 1800);
+    }, 1100);
   }
 </script>
-</body>
-</html>
+
+
+</body></html>
