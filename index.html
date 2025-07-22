@@ -1,191 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Color Game 🎲</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      width: 100vw;
-      font-family: sans-serif;
-      background: url('bg.jpg') no-repeat center center fixed;
-      background-size: 100% 100%;
-      overflow: hidden;
-    }
+  <meta charset="UTF-8" />
+  <title>Color Game 🎲</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      font-family: sans-serif;
+      background: url('bg.jpg') no-repeat center center fixed;
+      background-size: 100% 100%;
+      overflow: hidden;
+    }
 
-    .page-wrapper {
-      width: 100%;
-      max-width: 1000px;
-      position: absolute;
-      top: 180px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+    .page-wrapper {
+      width: 100%;
+      max-width: 1000px;
+      position: absolute;
+      top: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-    .container {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 40px;
-      width: 100%;
-    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      width: 100%;
+    }
 
-    .panel {
-      flex-shrink: 0;
-      width: 200px;
-      height: 280px;
-      overflow-y: auto;
-      border: 4px solid #007acc;
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-    }
+    .panel {
+      flex-shrink: 0;
+      width: 200px;
+      height: 280px;
+      overflow-y: auto;
+      border: 4px solid #007acc;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+    }
 
-    .panel h3 {
-      margin-top: 0;
-      text-align: center;
-      color: #007acc;
-    }
+    .panel h3 {
+      margin-top: 0;
+      text-align: center;
+      color: #007acc;
+    }
 
-    .color-box {
-      width: 20px;
-      height: 20px;
-      border: 1px solid #333;
-      opacity: 0.9;
-      margin-left: 5px;
-    }
+    .color-box {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #333;
+      opacity: 0.9;
+      margin-left: 5px;
+    }
 
-    .history-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
 
-    .game-area {
-      width: 320px;
-      height: 300px;
-      background: #fff;
-      border: 8px solid #007acc;
-      border-radius: 12px;
-      position: relative;
-      perspective: 1000px;
-      overflow: hidden;
-    }
+    .game-area {
+      width: 320px;
+      height: 300px;
+      background: #fff;
+      border: 8px solid #007acc;
+      border-radius: 12px;
+      position: relative;
+      perspective: 1000px;
+      overflow: hidden;
+    }
 
-    .dice {
-      width: 60px;
-      height: 60px;
-      position: absolute;
-      top: 120px;
-      transform-style: preserve-3d;
-    }
+    .dice {
+      width: 60px;
+      height: 60px;
+      position: absolute;
+      top: 120px;
+      transform-style: preserve-3d;
+    }
 
-    .face {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      opacity: 0.95;
-      border: 1px solid #333;
-    }
+    .face {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      opacity: 0.95;
+      border: 1px solid #333;
+    }
 
-    .face.front  { background: red;    transform: rotateY(0deg) translateZ(30px); }
-    .face.back   { background: violet; transform: rotateY(180deg) translateZ(30px); }
-    .face.right  { background: blue;   transform: rotateY(90deg) translateZ(30px); }
-    .face.left   { background: green;  transform: rotateY(-90deg) translateZ(30px); }
-    .face.top    { background: white;  transform: rotateX(-90deg) translateZ(30px); }
-    .face.bottom { background: yellow; transform: rotateX(90deg) translateZ(30px); }
+    .face.front  { background: red;    transform: rotateY(0deg) translateZ(30px); }
+    .face.back   { background: violet; transform: rotateY(180deg) translateZ(30px); }
+    .face.right  { background: blue;   transform: rotateY(90deg) translateZ(30px); }
+    .face.left   { background: green;  transform: rotateY(-90deg) translateZ(30px); }
+    .face.top    { background: white;  transform: rotateX(-90deg) translateZ(30px); }
+    .face.bottom { background: yellow; transform: rotateX(90deg) translateZ(30px); }
 
-    button {
-      font-size: 18px;
-      padding: 10px 20px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: box-shadow 0.3s ease;
-    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease;
+    }
 
-    button:hover {
-      box-shadow: 0 0 15px 4px rgba(40, 167, 69, 0.7);
-    }
+    button:hover {
+      box-shadow: 0 0 15px 4px rgba(40, 167, 69, 0.7);
+    }
 
-    .result {
-      text-align: center;
-      margin-top: 10px;
-      font-weight: bold;
-    }
+    .result {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
 
-    #riggedHint {
-      width: 6px;
-      height: 6px;
-      background: red;
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      border-radius: 50%;
-      opacity: 0.5;
-      z-index: 9999;
-      pointer-events: none;
-    }
+    #riggedHint {
+      width: 6px;
+      height: 6px;
+      background: red;
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      border-radius: 50%;
+      opacity: 0.5;
+      z-index: 9999;
+      pointer-events: none;
+    }
 
-    #historyCountInput {
-      margin-top: 10px;
-      width: 60px;
-      padding: 5px;
-      font-size: 14px;
-    }
+    #historyCountInput {
+      margin-top: 10px;
+      width: 60px;
+      padding: 5px;
+      font-size: 14px;
+    }
 
-    .legend {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 10px 0;
-    }
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
 
-    .game-wrapper {
-      flex-shrink: 0;
-      width: 320px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    .game-wrapper {
+      flex-shrink: 0;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-    .center-controls {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 10px;
-    }
+    .center-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+    }
 
-    .draggable-bet-box {
-      margin-top: 12px;
-      background: white;
-      border: 2px solid #007acc;
-      border-radius: 6px;
-      padding: 6px;
-      width: 200px;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-    }
+    .draggable-bet-box {
+      margin-top: 12px;
+      background: white;
+      border: 2px solid #007acc;
+      border-radius: 6px;
+      padding: 6px;
+      width: auto;
+      display: flex;
+      position: relative;
+    }
 
-    .draggable-bet-box textarea {
-      font-size: 40px;
-      border: none;
-      outline: none;
-      resize: none;
-      overflow: hidden;
-      display: block;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      background: transparent;
-      width: 100%;
-      min-height: 1em;
-    }
-  </style>
+    #allowedBets {
+      font-size: 50px;
+      line-height: 1.2;
+      border: none;
+      outline: none;
+      resize: none;
+      overflow: hidden;
+      display: block;
+      background: transparent;
+      min-height: 30px;
+      min-width: 200px;
+      box-sizing: content-box;
+      white-space: pre;
+    }
+  </style>
 </head>
 <body>
 
@@ -195,163 +195,172 @@
 <audio id="winSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/success.ogg"></audio>
 
 <div class="page-wrapper">
-  <div class="container">
-    <div class="panel">
-      <h3>Previous Rolls</h3>
-      <label for="historyCountInput">Show:</label>
-      <input id="historyCountInput" type="number" min="1" max="20" value="5" onchange="adjustHistoryCount()">
-      <div id="historyBox" style="margin-top: 10px;"></div>
-    </div>
+  <div class="container">
+    <div class="panel">
+      <h3>Previous Rolls</h3>
+      <label for="historyCountInput">Show:</label>
+      <input id="historyCountInput" type="number" min="1" max="20" value="5" onchange="adjustHistoryCount()">
+      <div id="historyBox" style="margin-top: 10px;"></div>
+    </div>
 
-    <div class="game-wrapper">
-      <div class="game-area" id="gameArea"></div>
+    <div class="game-wrapper">
+      <div class="game-area" id="gameArea"></div>
 
-      <div class="legend">
-        <div class="color-box" style="background:red" title="Red"></div>
-        <div class="color-box" style="background:blue" title="Blue"></div>
-        <div class="color-box" style="background:green" title="Green"></div>
-        <div class="color-box" style="background:yellow" title="Yellow"></div>
-        <div class="color-box" style="background:white" title="White"></div>
-        <div class="color-box" style="background:violet" title="Violet"></div>
-      </div>
+      <div class="legend">
+        <div class="color-box" style="background:red" title="Red"></div>
+        <div class="color-box" style="background:blue" title="Blue"></div>
+        <div class="color-box" style="background:green" title="Green"></div>
+        <div class="color-box" style="background:yellow" title="Yellow"></div>
+        <div class="color-box" style="background:white" title="White"></div>
+        <div class="color-box" style="background:violet" title="Violet"></div>
+      </div>
 
-      <div class="result" id="resultText">Waiting for roll...</div>
+      <div class="result" id="resultText">Waiting for roll...</div>
 
-      <div class="center-controls">
-        <button id="rollButton" onclick="rollDice()">ROLL DICE</button>
-        <div class="draggable-bet-box">
-          <textarea id="allowedBets" placeholder="Enter..." oninput="autoExpand(this)"></textarea>
-        </div>
-      </div>
-    </div>
+      <div class="center-controls">
+        <button id="rollButton" onclick="rollDice()">ROLL DICE</button>
+        <div class="draggable-bet-box">
+          <textarea id="allowedBets" placeholder="Enter..."></textarea>
+        </div>
+      </div>
+    </div>
 
-    <div class="panel">
-      <h3>Current Roll</h3>
-      <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
-    </div>
-  </div>
+    <div class="panel">
+      <h3>Current Roll</h3>
+      <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
+    </div>
+  </div>
 </div>
 
 <script>
-  const rotations = {
-    Red: "rotateX(0deg) rotateY(0deg)",
-    Violet: "rotateX(0deg) rotateY(180deg)",
-    Blue: "rotateX(0deg) rotateY(-90deg)",
-    Green: "rotateX(0deg) rotateY(90deg)",
-    White: "rotateX(90deg) rotateY(0deg)",
-    Yellow: "rotateX(-90deg) rotateY(0deg)"
-  };
+  const rotations = {
+    Red: "rotateX(0deg) rotateY(0deg)",
+    Violet: "rotateX(0deg) rotateY(180deg)",
+    Blue: "rotateX(0deg) rotateY(-90deg)",
+    Green: "rotateX(0deg) rotateY(90deg)",
+    White: "rotateX(90deg) rotateY(0deg)",
+    Yellow: "rotateX(-90deg) rotateY(0deg)"
+  };
 
-  const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
-  const gameArea = document.getElementById("gameArea");
-  const resultText = document.getElementById("resultText");
-  const historyBox = document.getElementById("historyBox");
-  const currentBox = document.getElementById("currentBox");
-  const rollSound = document.getElementById("rollSound");
-  const winSound = document.getElementById("winSound");
+  const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
+  const gameArea = document.getElementById("gameArea");
+  const resultText = document.getElementById("resultText");
+  const historyBox = document.getElementById("historyBox");
+  const currentBox = document.getElementById("currentBox");
+  const rollSound = document.getElementById("rollSound");
+  const winSound = document.getElementById("winSound");
 
-  let rigged = null;
-  let history = [];
-  let historyLimit = 5;
+  function adjustHistoryCount() {
+    const input = document.getElementById("historyCountInput");
+    const value = parseInt(input.value);
+    if (!isNaN(value) && value > 0) {
+      historyLimit = value;
+      updateHistory([]);
+    }
+  }
 
-  function autoExpand(textarea) {
-    textarea.style.height = "auto";
-    textarea.style.height = textarea.scrollHeight + "px";
-  }
+  let rigged = null;
+  let history = [];
+  let historyLimit = 5;
 
-  function createColorBox(color) {
-    const div = document.createElement("div");
-    div.className = "color-box";
-    div.style.background = color.toLowerCase();
-    return div;
-  }
+  function createColorBox(color) {
+    const div = document.createElement("div");
+    div.className = "color-box";
+    div.style.background = color.toLowerCase();
+    return div;
+  }
 
-  function updateHistory(colors) {
-    history.unshift(colors);
-    if (history.length > historyLimit) history.length = historyLimit;
-    historyBox.innerHTML = "";
-    history.forEach((entry, idx) => {
-      const row = document.createElement("div");
-      row.className = "history-item";
-      const label = document.createElement("span");
-      label.textContent = `${idx + 1}.`;
-      label.style.width = "20px";
-      row.appendChild(label);
-      entry.forEach(color => row.appendChild(createColorBox(color)));
-      historyBox.appendChild(row);
-    });
-  }
+  function updateHistory(colors) {
+    history.unshift(colors);
+    if (history.length > historyLimit) history.length = historyLimit;
+    historyBox.innerHTML = "";
+    history.forEach((entry, idx) => {
+      const row = document.createElement("div");
+      row.className = "history-item";
+      const label = document.createElement("span");
+      label.textContent = `${idx + 1}.`;
+      label.style.width = "20px";
+      row.appendChild(label);
+      entry.forEach(color => row.appendChild(createColorBox(color)));
+      historyBox.appendChild(row);
+    });
+  }
 
-  function updateCurrent(colors) {
-    currentBox.innerHTML = "";
-    colors.forEach(color => currentBox.appendChild(createColorBox(color)));
-  }
+  function updateCurrent(colors) {
+    currentBox.innerHTML = "";
+    colors.forEach(color => currentBox.appendChild(createColorBox(color)));
+  }
 
-  function adjustHistoryCount() {
-    const input = document.getElementById("historyCountInput");
-    const value = parseInt(input.value);
-    if (!isNaN(value) && value > 0) {
-      historyLimit = value;
-      updateHistory([]);
-    }
-  }
+  function rollDice() {
+    const rollBtn = document.getElementById("rollButton");
+    if (rollBtn.disabled) return;
+    rollBtn.disabled = true;
 
-  function rollDice() {
-    const rollBtn = document.getElementById("rollButton");
-    if (rollBtn.disabled) return;
-    rollBtn.disabled = true;
+    gameArea.innerHTML = "";
+    resultText.textContent = "🎲 Rolling...";
+    rollSound.currentTime = 0;
+    rollSound.play();
 
-    gameArea.innerHTML = "";
-    resultText.textContent = "🎲 Rolling...";
-    rollSound.currentTime = 0;
-    rollSound.play();
+    const results = rigged || [
+      colors[Math.floor(Math.random() * colors.length)],
+      colors[Math.floor(Math.random() * colors.length)],
+      colors[Math.floor(Math.random() * colors.length)]
+    ];
 
-    const results = rigged || [
-      colors[Math.floor(Math.random() * colors.length)],
-      colors[Math.floor(Math.random() * colors.length)],
-      colors[Math.floor(Math.random() * colors.length)]
-    ];
+    results.forEach((color, i) => {
+      const dice = document.createElement("div");
+      dice.className = "dice";
+      dice.style.left = `${60 + i * 70}px`;
+      gameArea.appendChild(dice);
 
-    results.forEach((color, i) => {
-      const dice = document.createElement("div");
-      dice.className = "dice";
-      dice.style.left = `${60 + i * 70}px`;
-      gameArea.appendChild(dice);
+      ["front", "back", "right", "left", "top", "bottom"].forEach(face => {
+        const f = document.createElement("div");
+        f.className = `face ${face}`;
+        dice.appendChild(f);
+      });
 
-      ["front", "back", "right", "left", "top", "bottom"].forEach(face => {
-        const f = document.createElement("div");
-        f.className = `face ${face}`;
-        dice.appendChild(f);
-      });
+      const baseRotation = rotations[color];
+      if (!baseRotation) return;
 
-      const baseRotation = rotations[color];
-      if (!baseRotation) return;
+      const match = baseRotation.match(/rotateX\((-?\d+)deg\)\srotateY\((-?\d+)deg\)/);
+      if (!match) return;
 
-      const match = baseRotation.match(/rotateX\((-?\d+)deg\)\srotateY\((-?\d+)deg\)/);
-      if (!match) return;
+      const x = parseInt(match[1]);
+      const y = parseInt(match[2]);
+      const finalRotation = `rotateX(${x + 720}deg) rotateY(${y + 720}deg)`;
 
-      const x = parseInt(match[1]);
-      const y = parseInt(match[2]);
-      const finalRotation = `rotateX(${x + 720}deg) rotateY(${y + 720}deg)`;
+      setTimeout(() => {
+        dice.style.transition = "transform 1.5s ease-in-out";
+        dice.style.transform = finalRotation;
+      }, 50);
+    });
 
-      setTimeout(() => {
-        dice.style.transition = "transform 1.5s ease-in-out";
-        dice.style.transform = finalRotation;
-      }, 50);
-    });
+    setTimeout(() => {
+      resultText.textContent = `🎯 Result: ${results.join(", ")}`;
+      updateCurrent(results);
+      updateHistory(results);
+    }, 1600);
 
-    setTimeout(() => {
-      resultText.textContent = `🎯 Result: ${results.join(", ")}`;
-      updateCurrent(results);
-      updateHistory(results);
-    }, 1600);
+    setTimeout(() => {
+      winSound.currentTime = 0;
+      winSound.play();
+      rollBtn.disabled = false;
+    }, 1100);
+  }
 
-    setTimeout(() => {
-      winSound.currentTime = 0;
-      winSound.play();
-      rollBtn.disabled = false;
-    }, 1100);
-  }
+  // Auto-expand textarea
+  const textarea = document.getEle
+mentById("allowedBets");
+  function autoExpand(el) {
+    el.style.height = "auto";
+    el.style.width = "auto";
+    el.style.height = el.scrollHeight + "px";
+    el.style.width = el.scrollWidth + "px";
+  }
+  textarea.addEventListener("input", function () {
+    autoExpand(this);
+  });
+  autoExpand(textarea);
 </script>
 
 </body>
