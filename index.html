@@ -1,27 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Color Game 🎲</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100vh;
-      width: 100vw;
       font-family: sans-serif;
       background: url('bg.jpg') no-repeat center center fixed;
-      background-size: 100% 100%;
-      overflow: hidden;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
     }
 
-    .page-wrapper {
-      width: 100%;
-      max-width: 1000px;
-      position: absolute;
-      top: 400px;
-      left: 50%;
-      transform: translateX(-50%);
+    h1 {
+      text-align: center;
+      color: #d80000;
+      text-shadow: 2px 2px gold;
     }
 
     .container {
@@ -30,6 +27,8 @@
       align-items: flex-start;
       gap: 40px;
       width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
     }
 
     .panel {
@@ -166,26 +165,42 @@
       border: 2px solid #007acc;
       border-radius: 6px;
       padding: 6px;
-      width: auto;
+      max-width: 100%;
       display: flex;
-      position: relative;
     }
 
-    #allowedBets {
-      font-size: 50px;
-      line-height: 1.2;
+    .draggable-bet-box textarea {
+      font-size: 40px;
       border: none;
       outline: none;
       resize: none;
       overflow: hidden;
       display: block;
-      background: transparent;
-      min-height: 30px;
-      min-width: 200px;
-      box-sizing: content-box;
       white-space: pre;
+      word-wrap: break-word;
+      box-sizing: border-box;
+      padding: 0;
+      background: transparent;
+      min-width: 50px;
+      min-height: 1em;
+      width: auto;
+      height: auto;
+    }
+
+    #mirror {
+      visibility: hidden;
+      white-space: pre-wrap;
+      position: absolute;
+      z-index: -1;
+      top: 0;
+      left: 0;
+      font-size: 40px;
+      line-height: 1.2;
     }
   </style>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -194,7 +209,8 @@
 <audio id="rollSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/roll.ogg"></audio>
 <audio id="winSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/success.ogg"></audio>
 
-<div class="page-wrapper">
+<div>
+  <h1>🎲 Color Game 🎲</h1>
   <div class="container">
     <div class="panel">
       <h3>Previous Rolls</h3>
@@ -220,7 +236,8 @@
       <div class="center-controls">
         <button id="rollButton" onclick="rollDice()">ROLL DICE</button>
         <div class="draggable-bet-box">
-          <textarea id="allowedBets" placeholder="Enter..."></textarea>
+          <textarea id="allowedBets" placeholder="Enter..." oninput="autoExpand(this)"></textarea>
+          <span id="mirror"></span>
         </div>
       </div>
     </div>
@@ -250,18 +267,31 @@
   const rollSound = document.getElementById("rollSound");
   const winSound = document.getElementById("winSound");
 
-  function adjustHistoryCount() {
-    const input = document.getElementById("historyCountInput");
-    const value = parseInt(input.value);
-    if (!isNaN(value) && value > 0) {
-      historyLimit = value;
-      updateHistory([]);
-    }
-  }
+  const firebaseConfig = {
+    apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
+    authDomain: "color-game-135fb.firebaseapp.com",
+    databaseURL: "https://color-game-135fb-default-rtdb.firebaseio.com",
+    projectId: "color-game-135fb",
+    storageBucket: "color-game-135fb.appspot.com",
+    messagingSenderId: "362417900313",
+    appId: "1:362417900313:web:765a79e4c95fa17936fa30"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const presetRef = db.ref("presetDice");
+  const rollingRef = db.ref("isRolling");
+  const historyRef = db.ref("history");
 
   let rigged = null;
   let history = [];
   let historyLimit = 5;
+
+  presetRef.on("value", snap => {
+    rigged = snap.val();
+    const hintDot = document.getElementById("riggedHint");
+    hintDot.style.background = (rigged && rigged.length > 0) ? "green" : "red";
+  });
 
   function createColorBox(color) {
     const div = document.createElement("div");
@@ -284,6 +314,7 @@
       entry.forEach(color => row.appendChild(createColorBox(color)));
       historyBox.appendChild(row);
     });
+    historyRef.set(history);
   }
 
   function updateCurrent(colors) {
@@ -291,7 +322,30 @@
     colors.forEach(color => currentBox.appendChild(createColorBox(color)));
   }
 
-  function rollDice() {
+  function adjustHistoryCount() {
+    const input = document.getElementById("historyCountInput");
+    const value = parseInt(input.value);
+    if (!isNaN(value) && value > 0) {
+      historyLimit = value;
+      updateHistory([]);
+    }
+  }
+
+  function autoExpand(textarea) {
+    const mirror = document.getElementById('mirror');
+    mirror.textContent = textarea.value || ' ';
+    const style = getComputedStyle(textarea);
+    mirror.style.font = style.font;
+    mirror.style.padding = style.padding;
+    mirror.style.border = style.border;
+    mirror.style.whiteSpace = 'pre-wrap';
+
+    textarea.style.width = mirror.scrollWidth + 2 + "px";
+    textarea.style.height = "auto";
+    textarea.style.height = mirror.scrollHeight + 2 + "px";
+  }
+
+  async function rollDice() {
     const rollBtn = document.getElementById("rollButton");
     if (rollBtn.disabled) return;
     rollBtn.disabled = true;
@@ -300,6 +354,7 @@
     resultText.textContent = "🎲 Rolling...";
     rollSound.currentTime = 0;
     rollSound.play();
+    await rollingRef.set(true);
 
     const results = rigged || [
       colors[Math.floor(Math.random() * colors.length)],
@@ -320,11 +375,7 @@
       });
 
       const baseRotation = rotations[color];
-      if (!baseRotation) return;
-
       const match = baseRotation.match(/rotateX\((-?\d+)deg\)\srotateY\((-?\d+)deg\)/);
-      if (!match) return;
-
       const x = parseInt(match[1]);
       const y = parseInt(match[2]);
       const finalRotation = `rotateX(${x + 720}deg) rotateY(${y + 720}deg)`;
@@ -344,23 +395,11 @@
     setTimeout(() => {
       winSound.currentTime = 0;
       winSound.play();
+      presetRef.set(null);
+      rollingRef.set(false);
       rollBtn.disabled = false;
-    }, 1100);
+    }, 1800);
   }
-
-  // Auto-expand textarea
-  const textarea = document.getElementById("allowedBets");
-  function autoExpand(el) {
-    el.style.height = "auto";
-    el.style.width = "auto";
-    el.style.height = el.scrollHeight + "px";
-    el.style.width = el.scrollWidth + "px";
-  }
-  textarea.addEventListener("input", function () {
-    autoExpand(this);
-  });
-  autoExpand(textarea);
 </script>
-
 </body>
 </html>
