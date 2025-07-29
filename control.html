@@ -22,25 +22,19 @@
       margin-bottom: 20px;
     }
 
-    .dice-group {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-bottom: 30px;
-    }
-
     .dice-box {
       border: 3px solid #555;
-      padding: 15px;
+      padding: 20px;
       border-radius: 10px;
       background-color: #222;
-      width: 150px;
+      max-width: 400px;
+      margin: 0 auto 30px;
     }
 
     .dice-box h3 {
-      margin-top: 0;
-      font-size: 20px;
+      font-size: 22px;
       color: #eee;
+      margin-bottom: 10px;
     }
 
     .color-options {
@@ -48,7 +42,6 @@
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
-      margin-top: 10px;
     }
 
     .color-option {
@@ -60,7 +53,7 @@
     }
 
     .color-option.selected {
-      border: 3px solid #0f0;
+      border: 3px solid #f00;
     }
 
     .submit-btn {
@@ -80,7 +73,7 @@
 
     .color-name {
       font-size: 16px;
-      margin-top: 6px;
+      margin-top: 12px;
     }
 
     .history-section {
@@ -125,7 +118,6 @@
     }
   </style>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
 </head>
@@ -134,24 +126,10 @@
   <h1>🎮 Rig Controller</h1>
   <div class="status" id="statusText">⏳ Connecting...</div>
 
-  <div class="dice-group">
-    <div class="dice-box" id="dice1Box">
-      <h3>Dice 1</h3>
-      <div class="color-options" id="dice1Colors"></div>
-      <div class="color-name" id="dice1Selected">None</div>
-    </div>
-
-    <div class="dice-box" id="dice2Box">
-      <h3>Dice 2</h3>
-      <div class="color-options" id="dice2Colors"></div>
-      <div class="color-name" id="dice2Selected">None</div>
-    </div>
-
-    <div class="dice-box" id="dice3Box">
-      <h3>Dice 3</h3>
-      <div class="color-options" id="dice3Colors"></div>
-      <div class="color-name" id="dice3Selected">None</div>
-    </div>
+  <div class="dice-box">
+    <h3>Exclude These Colors (All Dice)</h3>
+    <div class="color-options" id="allDiceColors"></div>
+    <div class="color-name" id="excludedLabel">Excluded: None</div>
   </div>
 
   <button class="submit-btn" onclick="submitRig()">Submit</button>
@@ -161,13 +139,12 @@
     <div class="history-column" id="historyContainer"></div>
   </div>
 
-  <!-- Sound effects -->
   <audio id="selectSound" src="https://www.soundjay.com/button/sounds/button-20.mp3"></audio>
   <audio id="submitSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
   <script>
     const colors = ["Red", "Blue", "Green", "Yellow", "White", "Violet"];
-    const selected = [null, null, null];
+    const excluded = [];
 
     const firebaseConfig = {
       apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
@@ -185,93 +162,76 @@
     const rollingRef = db.ref("isRolling");
     const historyRef = db.ref("history");
 
-    // Status and auto-clear
     rollingRef.on("value", (snap) => {
       const status = snap.val();
       document.getElementById("statusText").textContent = status ? "🎲 Rolling..." : "✅ Ready";
 
       if (!status) {
-        selected.fill(null);
-        ["dice1Colors", "dice2Colors", "dice3Colors"].forEach(id => {
-          const children = document.getElementById(id).children;
-          for (let child of children) {
-            child.classList.remove("selected");
-          }
-        });
-        ["dice1Selected", "dice2Selected", "dice3Selected"].forEach(id => {
-          const el = document.getElementById(id);
-          el.textContent = "None";
-          el.style.backgroundColor = "transparent";
-          el.style.width = "";
-          el.style.height = "";
-        });
-
-        // Play sound after roll
+        excluded.length = 0;
+        const children = document.getElementById("allDiceColors").children;
+        for (let child of children) {
+          child.classList.remove("selected");
+        }
+        updateExcludedLabel();
         document.getElementById("submitSound").play();
       }
     });
 
-    function renderColors(containerId, index) {
+    function renderColors(containerId) {
       const container = document.getElementById(containerId);
       colors.forEach(color => {
         const div = document.createElement("div");
         div.className = "color-option";
         div.style.backgroundColor = color.toLowerCase();
+
         div.onclick = () => {
-          selectColor(index, color, div);
+          const idx = excluded.indexOf(color);
+          if (idx > -1) {
+            excluded.splice(idx, 1);
+            div.classList.remove("selected");
+          } else {
+            excluded.push(color);
+            div.classList.add("selected");
+          }
+          updateExcludedLabel();
           document.getElementById("selectSound").play();
         };
+
         container.appendChild(div);
       });
     }
 
-    function selectColor(diceIndex, color, element) {
-      selected[diceIndex] = color;
-
-      const containerId = `dice${diceIndex + 1}Colors`;
-      const boxes = document.getElementById(containerId).children;
-      for (let i = 0; i < boxes.length; i++) {
-        boxes[i].classList.remove("selected");
-        if (boxes[i].style.backgroundColor === color.toLowerCase()) {
-          boxes[i].classList.add("selected");
-        }
-      }
-
-      const label = document.getElementById(`dice${diceIndex + 1}Selected`);
-      label.textContent = "";
-      label.style.backgroundColor = color.toLowerCase();
-      label.style.width = "35px";
-      label.style.height = "25px";
-      label.style.margin = "auto";
+    function updateExcludedLabel() {
+      const label = document.getElementById("excludedLabel");
+      label.textContent = "Excluded: " + (excluded.length ? excluded.join(", ") : "None");
     }
 
     function submitRig() {
-      if (selected.every(c => c)) {
-        presetRef.set(selected);
-        document.getElementById("submitSound").play();
-        const toast = document.createElement("div");
-        toast.textContent = "🎯 Rig submitted!";
-        toast.style.position = "fixed";
-        toast.style.bottom = "30px";
-        toast.style.left = "50%";
-        toast.style.transform = "translateX(-50%)";
-        toast.style.background = "#0f0";
-        toast.style.color = "#000";
-        toast.style.padding = "12px 24px";
-        toast.style.borderRadius = "8px";
-        toast.style.zIndex = 9999;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-      } else {
-        alert("⚠️ Please select a color for all dice.");
+      if (excluded.length >= colors.length) {
+        alert("⚠️ You cannot exclude all colors.");
+        return;
       }
+
+      presetRef.set(excluded);
+      document.getElementById("submitSound").play();
+
+      const toast = document.createElement("div");
+      toast.textContent = "🚫 Exclusions submitted!";
+      toast.style.position = "fixed";
+      toast.style.bottom = "30px";
+      toast.style.left = "50%";
+      toast.style.transform = "translateX(-50%)";
+      toast.style.background = "#f00";
+      toast.style.color = "#fff";
+      toast.style.padding = "12px 24px";
+      toast.style.borderRadius = "8px";
+      toast.style.zIndex = 9999;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
     }
 
-    renderColors("dice1Colors", 0);
-    renderColors("dice2Colors", 1);
-    renderColors("dice3Colors", 2);
+    renderColors("allDiceColors");
 
-    // Vertical roll history
     historyRef.on("value", (snapshot) => {
       const history = snapshot.val() || [];
       const container = document.getElementById("historyContainer");
