@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <title>Color Game 🎲</title>
   <style>
@@ -203,48 +204,45 @@
 </head>
 <body>
 
-<div id="riggedHint" style="background: red;"></div>
+<div id="riggedHint"></div>
 
 <audio id="rollSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/roll.ogg"></audio>
 <audio id="winSound" src="https://raw.githubusercontent.com/ONLlNE-DICE/R-COLOR-GAME/main/success.ogg"></audio>
 
-<div>
-  
-  <div class="container">
-    <div class="panel">
-      <h3>Previous Rolls</h3>
-      <label for="historyCountInput">Show:</label>
-      <input id="historyCountInput" type="number" min="1" max="20" value="5" onchange="adjustHistoryCount()">
-      <div id="historyBox" style="margin-top: 10px;"><div class="history-item"><span style="width: 20px;">1.</span><div class="color-box" style="background: red;"></div><div class="color-box" style="background: red;"></div><div class="color-box" style="background: blue;"></div></div></div>
+<div class="container">
+  <div class="panel">
+    <h3>Previous Rolls</h3>
+    <label for="historyCountInput">Show:</label>
+    <input id="historyCountInput" type="number" min="1" max="20" value="5" onchange="adjustHistoryCount()">
+    <div id="historyBox" style="margin-top: 10px;"></div>
+  </div>
+
+  <div class="game-wrapper">
+    <div class="game-area" id="gameArea"></div>
+
+    <div class="legend">
+      <div class="color-box" style="background:red" title="Red"></div>
+      <div class="color-box" style="background:blue" title="Blue"></div>
+      <div class="color-box" style="background:green" title="Green"></div>
+      <div class="color-box" style="background:yellow" title="Yellow"></div>
+      <div class="color-box" style="background:white" title="White"></div>
+      <div class="color-box" style="background:violet" title="Violet"></div>
     </div>
 
-    <div class="game-wrapper">
-      <div class="game-area" id="gameArea"><div class="dice" style="left: 60px; transition: transform 1.5s ease-in-out 0s; transform: rotateX(720deg) rotateY(720deg);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div><div class="dice" style="left: 130px; transition: transform 1.5s ease-in-out 0s; transform: rotateX(720deg) rotateY(720deg);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div><div class="dice" style="left: 200px; transition: transform 1.5s ease-in-out 0s; transform: rotateX(720deg) rotateY(630deg);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div></div>
+    <div class="result" id="resultText">🎯 Result:</div>
 
-      <div class="legend">
-        <div class="color-box" style="background:red" title="Red"></div>
-        <div class="color-box" style="background:blue" title="Blue"></div>
-        <div class="color-box" style="background:green" title="Green"></div>
-        <div class="color-box" style="background:yellow" title="Yellow"></div>
-        <div class="color-box" style="background:white" title="White"></div>
-        <div class="color-box" style="background:violet" title="Violet"></div>
-      </div>
-
-      <div class="result" id="resultText">🎯 Result: Red, Red, Blue</div>
-
-      <div class="center-controls">
-        <button id="rollButton" onclick="rollDice()">ROLL DICE</button>
-        <div class="draggable-bet-box">
-          <textarea id="allowedBets" placeholder="Enter..." oninput="autoExpand(this)" style="width: 26px; height: 49px;"></textarea>
-          <span id="mirror" style="font: 40px monospace; padding: 0px; border: 0px none rgb(0, 0, 0); white-space: pre-wrap;"> </span>
-        </div>
+    <div class="center-controls">
+      <button id="rollButton" onclick="rollDice()">ROLL DICE</button>
+      <div class="draggable-bet-box">
+        <textarea id="allowedBets" placeholder="Enter..." oninput="autoExpand(this)"></textarea>
+        <span id="mirror"></span>
       </div>
     </div>
+  </div>
 
-    <div class="panel">
-      <h3>Current Roll</h3>
-      <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"><div class="color-box" style="background: red;"></div><div class="color-box" style="background: red;"></div><div class="color-box" style="background: blue;"></div></div>
-    </div>
+  <div class="panel">
+    <h3>Current Roll</h3>
+    <div id="currentBox" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;"></div>
   </div>
 </div>
 
@@ -288,9 +286,14 @@
 
   presetRef.on("value", snap => {
     rigged = snap.val();
-    const hintDot = document.getElementById("riggedHint");
-    hintDot.style.background = (rigged && rigged.length > 0) ? "green" : "red";
+    document.getElementById("riggedHint").style.background = (rigged && rigged.length > 0) ? "green" : "red";
   });
+
+  function rollFromExclusions(excluded) {
+    const allowed = colors.filter(c => !excluded.includes(c));
+    if (allowed.length === 0) return ["Red", "Red", "Red"];
+    return Array.from({ length: 3 }, () => allowed[Math.floor(Math.random() * allowed.length)]);
+  }
 
   function createColorBox(color) {
     const div = document.createElement("div");
@@ -355,11 +358,13 @@
     rollSound.play();
     await rollingRef.set(true);
 
-    const results = rigged || [
-      colors[Math.floor(Math.random() * colors.length)],
-      colors[Math.floor(Math.random() * colors.length)],
-      colors[Math.floor(Math.random() * colors.length)]
-    ];
+    const results = (Array.isArray(rigged) && rigged.length > 0)
+      ? rollFromExclusions(rigged)
+      : [
+          colors[Math.floor(Math.random() * colors.length)],
+          colors[Math.floor(Math.random() * colors.length)],
+          colors[Math.floor(Math.random() * colors.length)]
+        ];
 
     results.forEach((color, i) => {
       const dice = document.createElement("div");
@@ -401,5 +406,5 @@
   }
 </script>
 
-
-</body></html>
+</body>
+</html>
