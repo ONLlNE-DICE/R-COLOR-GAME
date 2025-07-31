@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roller Control Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #a5ceff;
+            color: black;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .wrapper {
+            width: 90%; /* Responsive width */
+            max-width: 800px; /* Max width for larger screens */
+            border: 5px solid white;
+            background-color: #5ba7ff;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .title {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 28px; /* Adjusted for mobile */
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            font-family: 'Luckiest Guy', cursive;
+            color: white;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .section {
+            background-color: #2d98ff;
+            border: 3px solid white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 100%; /* Full width for mobile */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section label {
+            display: inline-flex;
+            align-items: center;
+            margin: 5px 10px; /* Adjusted for mobile */
+            font-size: 16px; /* Adjusted for mobile */
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+
+        .section input[type="checkbox"] {
+            margin-right: 8px;
+            width: 20px;
+            height: 20px;
+            accent-color: #ffeb3b; /* Highlight color for checkbox */
+        }
+
+        .section button {
+            background: linear-gradient(to bottom, #ffeb3b, #ffc107);
+            color: white;
+            font-family: 'Luckiest Guy', cursive;
+            padding: 8px 15px; /* Adjusted for mobile */
+            font-size: 18px; /* Adjusted for mobile */
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 3px solid white;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            margin-top: 15px;
+            -webkit-text-stroke: 0.1px #ca8a00;
+        }
+
+        .section button:hover {
+            transform: scale(1.03);
+            box-shadow: 0px 6px 9px rgba(0, 0, 0, 0.3);
+        }
+
+        .section button:active {
+            transform: scale(0.97);
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .color-label.red { color: red; }
+        .color-label.orange { color: orange; }
+        .color-label.gold { color: gold; }
+        .color-label.green { color: green; }
+        .color-label.blue { color: blue; }
+        .color-label.purple { color: purple; }
+
+        .status-indicator {
+            font-size: 20px; /* Adjusted for mobile */
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .status-indicator.rolling {
+            background-color: #ff4d4d; /* Red for rolling */
+        }
+
+        .status-indicator.idle {
+            background-color: #4CAF50; /* Green for idle */
+        }
+
+        .history-log {
+            background-color: #e0f2f7; /* Light blue background */
+            border: 2px solid #0088ff;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            text-align: left;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        .history-log div {
+            padding: 5px 0;
+            border-bottom: 1px dashed #b3e0ff;
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Vertically align items */
+            flex-wrap: wrap; /* Allow items to wrap */
+        }
+
+        .history-log div:last-child {
+            border-bottom: none;
+        }
+
+        .history-log .timestamp {
+            font-weight: bold;
+            color: #0056b3;
+            margin-right: 10px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .history-log .type {
+            font-style: italic;
+            color: #666;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .history-log .results {
+            font-weight: bold;
+            color: #333;
+            display: flex; /* For displaying color blocks */
+            gap: 5px; /* Space between color blocks */
+            flex-wrap: wrap; /* Allow results to wrap */
+        }
+
+        .history-log .color-display-block {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        .history-log .coin-display-text {
+            padding: 2px 5px;
+            border-radius: 4px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            font-size: 12px;
+            text-transform: capitalize;
+        }
+    </style>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="title">CONTROL PANEL</div>
+
+        <div class="section">
+            <h2>Manage Exclusions (Rig)</h2>
+            <div id="exclusionCheckboxes">
+                <label class="color-label red"><input type="checkbox" data-color="red"> Red</label>
+                <label class="color-label orange"><input type="checkbox" data-color="orange"> Orange</label>
+                <label class="color-label gold"><input type="checkbox" data-color="gold"> Gold</label>
+                <label class="color-label green"><input type="checkbox" data-color="green"> Green</label>
+                <label class="color-label blue"><input type="checkbox" data-color="blue"> Blue</label>
+                <label class="color-label purple"><input type="checkbox" data-color="purple"> Purple</label>
+                <br>
+                <label class="color-label green"><input type="checkbox" data-color="heads"> Heads</label>
+                <label class="color-label orange"><input type="checkbox" data-color="tails"> Tails</label>
+            </div>
+            <button id="applyExclusions">Apply Exclusions</button>
+            <button id="clearExclusions">Clear All Exclusions</button>
+        </div>
+
+        <div class="section">
+            <h2>Live Status</h2>
+            <div id="rollingStatus" class="status-indicator">Checking status...</div>
+        </div>
+
+        <div class="section">
+            <h2>Roll History</h2>
+            <div id="historyLog" class="history-log">
+                No history yet.
+            </div>
+            <button id="clearHistory">Clear History</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration (Use your actual Firebase config from index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
+            authDomain: "color-game-135fb.firebaseapp.com",
+            databaseURL: "https://color-game-135fb-default-rtdb.firebaseio.com",
+            projectId: "color-game-135fb",
+            storageBucket: "color-game-135fb.appspot.com",
+            messagingSenderId: "362417900313",
+            appId: "1:362417900313:web:765a79e4c95fa17936fa30" // Ensure this matches your actual App ID
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const presetRef = db.ref("presetDice");
+        const rollingRef = db.ref("isRolling");
+        const historyRef = db.ref("history");
+
+        const exclusionCheckboxesDiv = document.getElementById("exclusionCheckboxes");
+        const applyExclusionsBtn = document.getElementById("applyExclusions");
+        const clearExclusionsBtn = document.getElementById("clearExclusions");
+        const rollingStatusDiv = document.getElementById("rollingStatus");
+        const historyLogDiv = document.getElementById("historyLog");
+        const clearHistoryBtn = document.getElementById("clearHistory");
+
+        const allExclusionCheckboxes = exclusionCheckboxesDiv.querySelectorAll('input[type="checkbox"]');
+
+        // --- Exclusion Management ---
+        applyExclusionsBtn.addEventListener("click", () => {
+            const selectedExclusions = [];
+            allExclusionCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedExclusions.push(checkbox.dataset.color);
+                }
+            });
+            presetRef.set(selectedExclusions)
+                .then(() => {
+                    alert("Exclusions applied successfully!");
+                })
+                .catch(error => {
+                    console.error("Error applying exclusions:", error);
+                    alert("Failed to apply exclusions.");
+                });
+        });
+
+        clearExclusionsBtn.addEventListener("click", () => {
+            presetRef.set([]) // Set to an empty array to clear all
+                .then(() => {
+                    allExclusionCheckboxes.forEach(checkbox => checkbox.checked = false);
+                    alert("All exclusions cleared!");
+                })
+                .catch(error => {
+                    console.error("Error clearing exclusions:", error);
+                    alert("Failed to clear exclusions.");
+                });
+        });
+
+        // Listen for changes in presetDice to update checkboxes
+        presetRef.on("value", (snapshot) => {
+            const currentExclusions = snapshot.val() || [];
+            allExclusionCheckboxes.forEach(checkbox => {
+                checkbox.checked = currentExclusions.includes(checkbox.dataset.color);
+            });
+        });
+
+        // --- Rolling Status Monitoring ---
+        rollingRef.on("value", (snapshot) => {
+            const isRolling = snapshot.val();
+            if (isRolling) {
+                rollingStatusDiv.textContent = "Status: Rolling...";
+                rollingStatusDiv.className = "status-indicator rolling";
+            } else {
+                rollingStatusDiv.textContent = "Status: Idle";
+                rollingStatusDiv.className = "status-indicator idle";
+                // Reset exclusions after each roll
+                presetRef.set([]); // Clear exclusions
+            }
+        });
+
+        // --- History Display ---
+        historyRef.on("value", (snapshot) => {
+            const history = snapshot.val();
+            historyLogDiv.innerHTML = ""; // Clear current log
+
+            if (!history) {
+                historyLogDiv.textContent = "No history yet.";
+                return;
+            }
+
+            // Convert object to array and sort by timestamp (assuming Firebase push keys are chronological)
+            const historyArray = Object.keys(history).map(key => ({
+                id: key,
+                ...history[key]
+            })).reverse(); // Show most recent first
+
+            historyArray.forEach(entry => {
+                const entryDiv = document.createElement("div");
+                const timestamp = new Date(parseInt(entry.id.substring(1))).toLocaleString(); // Convert Firebase push key to date
+
+                let resultsHtml = '';
+                if (entry.type === 'dice') {
+                    // For dice, create color blocks
+                    resultsHtml = '<div class="results">';
+                    entry.results.forEach(color => {
+                        resultsHtml += `<div class="color-display-block" style="background-color: ${color};"></div>`;
+                    });
+                    resultsHtml += '</div>';
+                } else if (entry.type === 'coin') {
+                    // For coins, display text
+                    resultsHtml = '<div class="results">';
+                    entry.results.forEach(face => {
+                        resultsHtml += `<span class="coin-display-text">${face}</span>`;
+                    });
+                    resultsHtml += '</div>';
+                }
+
+                entryDiv.innerHTML = `
+                    <span class="timestamp">${timestamp}</span>
+                    <span class="type">[${entry.type.toUpperCase()}]</span>
+                    ${resultsHtml}
+                `;
+                historyLogDiv.appendChild(entryDiv);
+            });
+        });
+
+        clearHistoryBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to clear all history? This cannot be undone.")) {
+                historyRef.set(null) // Set to null to delete the node
+                    .then(() => {
+                        alert("History cleared successfully!");
+                    })
+                    .catch(error => {
+                        console.error("Error clearing history:", error);
+                        alert("Failed to clear history.");
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
