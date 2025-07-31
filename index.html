@@ -384,7 +384,7 @@
 </head>
 <body>
     <div class="wrapper">
-        <div class="title">MONYUN DICE</div>
+        <div class="title">ONLINE DICE</div>
         <div class="dropdown-container">
             <select id="numDice">
                 <option value="1">1 dice</option>
@@ -439,7 +439,7 @@
         const validCoinFaces = ["heads", "tails"]; // Added for coin exclusion
         let currentExcludedColors = []; // This will store exclusions from Firebase
 
-        const rollSound = new Audio('roll-sound.mp3');
+        const rollSound = new Audio('roll.ogg');
         const winSound = new Audio('success.ogg'); // Added winSound
         let isMuted = false;
 
@@ -599,9 +599,9 @@
             rollButton.disabled = true;
             await rollingRef.set(true); // Set rolling status to true in Firebase
 
-            const rollDuration = 1600;
+            const rollDuration = 1100;
             const rollingColor = "#eaf5ff";
-            const soundDuration = 1100;
+            const soundDuration = 0;
 
             playRollSound();
 
