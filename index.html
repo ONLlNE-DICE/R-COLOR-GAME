@@ -417,7 +417,7 @@
         <div class="history-column" id="historyContainer"></div>
     </div>
 
-    <audio id="rollSound" src="roll-sound.mp3"></audio>
+    <audio id="rollSound" src="roll.ogg"></audio>
 
     <script>
         let numDice = 1;
@@ -486,9 +486,9 @@
             rollButton.disabled = true;
             rollingRef.set(true);
 
-            const rollDuration = 1600;
+            const rollDuration = 1100;
             const rollingColor = "#eaf5ff";
-            const soundDuration = 2800;
+            const soundDuration = 0;
 
             playSound(rollSound);
 
