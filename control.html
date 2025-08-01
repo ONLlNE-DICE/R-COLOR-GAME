@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎮 Rig Control</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 36px;
+    }
+
+    .status {
+      font-size: 20px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .dice-box {
+      border: 3px solid #555;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: #222;
+      max-width: 400px;
+      margin: 0 auto 30px;
+    }
+
+    .dice-box h3 {
+      font-size: 22px;
+      color: #eee;
+      margin-bottom: 10px;
+    }
+
+    .color-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .color-option {
+      width: 45px;
+      height: 45px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: border 0.2s ease;
+    }
+
+    .color-option.selected {
+      border: 3px solid #f00;
+    }
+
+    .submit-btn {
+      margin-top: 25px;
+      padding: 14px 28px;
+      font-size: 20px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s ease;
+    }
+
+    .submit-btn:hover {
+      background-color: #218838;
+    }
+
+    .color-name {
+      font-size: 16px;
+      margin-top: 12px;
+    }
+
+    .history-section {
+      margin-top: 40px;
+      width: 100%;
+      max-width: 450px;
+    }
+
+    .history-label {
+      font-size: 18px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    .history-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .history-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #333;
+      padding: 10px 20px;
+      border-radius: 8px;
+      width: fit-content;
+      min-width: 180px;
+      justify-content: center;
+    }
+
+    .history-index {
+      font-size: 16px;
+      width: 20px;
+      text-align: right;
+      color: #aaa;
+    }
+
+    .color-set {
+      display: flex;
+      gap: 6px;
+    }
+
+    .color-square {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #444;
+      border-radius: 4px;
+    }
+
+    /* Toast message for exclusions */
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #f00;
+        color: #fff;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-size: 18px;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        animation: toastFadeIn 0.3s ease-out, toastFadeOut 0.5s ease-in 1.5s forwards;
+    }
+
+    @keyframes toastFadeIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    @keyframes toastFadeOut {
+        from { opacity: 1; transform: translateX(-50%) translateY(0); }
+        to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    }
+
+    .game-type-selector {
+        margin-bottom: 20px;
+        padding: 8px 15px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #555;
+        background-color: #333;
+        color: #fff;
+        cursor: pointer;
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <h1>🎮 Rig Controller</h1>
+  <div class="status" id="statusText">⏳ Connecting...</div>
+
+  <select id="gameTypeSelector" class="game-type-selector">
+    <option value="color">Color Dice</option>
+    <option value="headsOrTails">Heads or Tails</option>
+  </select>
+
+  <div class="dice-box">
+    <h3 id="excludeTitle">Exclude These Colors (All Dice)</h3>
+    <div class="color-options" id="allDiceColors"></div>
+    <div class="color-name" id="excludedLabel">Excluded: None</div>
+  </div>
+
+  <button class="submit-btn" onclick="submitRig()">Submit Exclusions</button>
+
+  <div class="history-section">
+    <div class="history-label">🎲 Roll History</div>
+    <div class="history-column" id="historyContainer"></div>
+  </div>
+
+  <audio id="selectSound" src="https://www.soundjay.com/button/sounds/button-20.mp3"></audio>
+  <audio id="submitSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+
+  <script>
+    // Standardized list of all possible colors (lowercase for consistency)
+    const allValidColors = ["red", "orange", "yellow", "green", "blue", "purple"];
+    const validCoinSides = ["Heads", "Tails"]; // Keep capitalized for display in control UI
+    let currentExcluded = []; // This array holds the currently selected exclusions in the UI
+    let currentGameType = "color"; // Default game type for the controller
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX6bXyHJEdUFSZTq2tBqFYFYNv7FSxD8",
+      authDomain: "color-game-135fb.firebaseapp.com",
+      databaseURL: "https://color-game-135fb-default-rtdb.firebaseio.com",
+      projectId: "color-game-135fb",
+      storageBucket: "color-game-135fb.appspot.com",
+      messagingSenderId: "362417900313",
+      appId: "1:362417900313:web:765a79e4c95fa17936fa30"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const presetRef = db.ref("preset");
+    const rollingRef = db.ref("isRolling");
+    const historyRef = db.ref("history");
+
+    const selectSound = document.getElementById("selectSound");
+    const submitSound = document.getElementById("submitSound");
+
+    let isMuted = false;
+
+    function playSound(audioElement) {
+        if (!isMuted) {
+            audioElement.currentTime = 0;
+            audioElement.play();
+        }
+    }
+
+    rollingRef.on("value", (snap) => {
+      const status = snap.val();
+      document.getElementById("statusText").textContent = status ? "🎲 Rolling..." : "✅ Ready";
+
+      // When rolling stops, reset the exclusions in the UI and Firebase
+      if (!status) {
+        playSound(submitSound);
+        // Reset currentExcluded to empty
+        currentExcluded = [];
+        // Update Firebase to reflect "None" for the current game type
+        presetRef.set({
+            gameType: currentGameType,
+            excluded: currentExcluded
+        });
+        // Re-render the UI to show no selections
+        renderColors(currentGameType);
+        updateExcludedLabel();
+      }
+    });
+
+    // Listen to presetRef to update UI if another controller changes it or on initial load
+    // This listener is still important for initial load and if multiple controllers are used.
+    presetRef.on("value", (snap) => {
+        const presetData = snap.val();
+        if (presetData && presetData.gameType && Array.isArray(presetData.excluded)) {
+            // Only update if the data from Firebase is different from current local state
+            // This prevents an infinite loop if this listener triggers the set() below
+            if (currentGameType !== presetData.gameType || JSON.stringify(currentExcluded) !== JSON.stringify(presetData.excluded)) {
+                currentGameType = presetData.gameType;
+                currentExcluded = presetData.excluded;
+
+                const gameTypeSelector = document.getElementById("gameTypeSelector");
+                if (gameTypeSelector.value !== currentGameType) {
+                    gameTypeSelector.value = currentGameType;
+                }
+                renderColors(currentGameType);
+                updateExcludedLabel();
+            }
+        } else {
+            // If preset is empty or malformed, reset to default
+            // This will also trigger a presetRef.set() to clear Firebase
+            currentGameType = "color";
+            currentExcluded = [];
+            document.getElementById("gameTypeSelector").value = "color";
+            renderColors(currentGameType);
+            updateExcludedLabel();
+            presetRef.set({
+                gameType: currentGameType,
+                excluded: currentExcluded
+            });
+        }
+    });
+
+
+    function renderColors(type) {
+      const container = document.getElementById("allDiceColors");
+      container.innerHTML = ""; // Clear existing options
+
+      let optionsToRender = [];
+      if (type === "color") {
+        optionsToRender = allValidColors.map(c => c.charAt(0).toUpperCase() + c.slice(1)); // Capitalize for display
+        document.getElementById("excludeTitle").textContent = "Exclude These Colors (All Dice)";
+      } else { // headsOrTails
+        optionsToRender = validCoinSides; // Already capitalized
+        document.getElementById("excludeTitle").textContent = "Exclude These Coin Sides";
+      }
+
+      optionsToRender.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "color-option";
+        const itemValue = item.toLowerCase(); // Always work with lowercase for internal logic
+
+        if (type === "color") {
+            div.style.backgroundColor = itemValue;
+        } else { // headsOrTails
+            div.style.backgroundColor = itemValue === "heads" ? "green" : "orange";
+            div.textContent = item.charAt(0); // Display 'H' or 'T'
+            div.style.color = 'white';
+            div.style.display = 'flex';
+            div.style.justifyContent = 'center';
+            div.style.alignItems = 'center';
+            div.style.fontSize = '20px';
+            div.style.fontWeight = 'bold';
+        }
+
+        if (currentExcluded.includes(itemValue)) { // Check against lowercase excluded list
+          div.classList.add("selected");
+        }
+
+        div.onclick = () => {
+          const idx = currentExcluded.indexOf(itemValue);
+          if (idx > -1) {
+            currentExcluded.splice(idx, 1);
+            div.classList.remove("selected");
+          } else {
+            currentExcluded.push(itemValue);
+            div.classList.add("selected");
+          }
+          updateExcludedLabel();
+          playSound(selectSound);
+        };
+
+        container.appendChild(div);
+      });
+    }
+
+    function updateExcludedLabel() {
+      const label = document.getElementById("excludedLabel");
+      label.textContent = "Excluded: " + (currentExcluded.length ? currentExcluded.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", ") : "None");
+    }
+
+    function submitRig() {
+      let allPossibleOutcomes;
+      if (currentGameType === "color") {
+          allPossibleOutcomes = allValidColors; // Use standardized lowercase array
+      } else {
+          allPossibleOutcomes = validCoinSides.map(s => s.toLowerCase()); // Ensure lowercase for comparison
+      }
+
+      if (currentExcluded.length >= allPossibleOutcomes.length) {
+        alert("⚠️ You cannot exclude all possible outcomes for the current game type.");
+        return;
+      }
+
+      // Send both gameType and excluded array to Firebase
+      presetRef.set({
+          gameType: currentGameType,
+          excluded: currentExcluded
+      });
+      playSound(submitSound);
+
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = "🚫 Exclusions submitted!";
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    // Game Type Selector Logic
+    document.getElementById("gameTypeSelector").addEventListener("change", function() {
+        currentGameType = this.value;
+        currentExcluded = []; // Clear exclusions when changing game type in the controller UI
+        renderColors(currentGameType);
+        updateExcludedLabel();
+        // Also immediately update Firebase with the new game type and empty exclusions
+        // This ensures index.html knows the game type has changed
+        presetRef.set({
+            gameType: currentGameType,
+            excluded: currentExcluded
+        });
+    });
+
+    historyRef.on("value", (snapshot) => {
+      const history = snapshot.val() || {};
+      const container = document.getElementById("historyContainer");
+      container.innerHTML = "";
+
+      const historyArray = Object.keys(history).map(key => history[key]);
+      historyArray.slice(-5).forEach((roll, idx) => {
+        const row = document.createElement("div");
+        row.className = "history-box";
+
+        const index = document.createElement("div");
+        index.className = "history-index";
+        index.textContent = `${idx + 1}.`;
+
+        const colorSet = document.createElement("div");
+        colorSet.className = "color-set";
+
+        roll.forEach(outcome => {
+          const square = document.createElement("div");
+          square.className = "color-square";
+          // Use allValidColors for checking
+          if (allValidColors.includes(outcome)) {
+              square.style.backgroundColor = outcome.toLowerCase();
+          } else if (validCoinSides.map(s => s.toLowerCase()).includes(outcome)) {
+              square.style.backgroundColor = outcome === "heads" ? "green" : "orange";
+              square.textContent = outcome.charAt(0).toUpperCase();
+              square.style.color = 'white';
+              square.style.fontSize = '14px';
+              square.style.display = 'flex';
+              square.style.justifyContent = 'center';
+              square.style.alignItems = 'center';
+          }
+          colorSet.appendChild(square);
+        });
+
+        row.appendChild(index);
+        row.appendChild(colorSet);
+        container.appendChild(row);
+      });
+    });
+
+    // Initial render on load
+    window.onload = function() {
+        // The presetRef.on("value") listener will handle the initial rendering
+        // based on what's currently in Firebase.
+        // If Firebase is empty, it will default to "color" and no exclusions.
+    };
+  </script>
+</body>
+</html>
